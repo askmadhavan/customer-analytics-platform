@@ -38,8 +38,10 @@ mlflow.db
 # Large model files
 *.pkl
 !ml/models/churn_model.pkl
+!api/models/churn_model.pkl
 *.skops
 
 # Python cache
 __pycache__/
 .pytest_cache/
+.vercel
