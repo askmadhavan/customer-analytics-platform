@@ -7,22 +7,25 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230C3B3F'/%3E%3Cpath d='M5 15A11 11 0 0 1 27 15Z' fill='%23F4F0E6'/%3E%3Cpath d='M27 17A11 11 0 0 1 5 17Z' fill='%23A8C4C1'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    /* Brand: half moons, Inter */
+    /* Brand: half moons, Inter. Off-white ground, peacock text, deep teal as the one accent. */
     :root {
-      /* Light theme: off-white ground, peacock text, deep teal as the one accent */
       --bg: #F4F0E6;
       --fg: #0C3B3F;
-      --panel: #F4F0E6;
+      --panel: #F7F4EC;
       --inset: #E9E3D5;
       --sub: #566C6B;
       --accent: #0C6B70;
+      --warn: #A6611A;
+      --warn-bg: #F3E4CC;
       --line: #D8D1BF;
       --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
       color-scheme: light;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: var(--font);
       background: var(--bg);
@@ -34,113 +37,297 @@
       -webkit-font-smoothing: antialiased;
     }
     button { font: inherit; }
-    a:focus-visible, button:focus-visible, input:focus-visible {
+    a { color: var(--accent); }
+    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 3px;
     }
     h1:focus, h2:focus { outline: none; }
 
-    /* Half moons: drawn once, fixed behind the page, never animated */
     .moons {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      pointer-events: none;
-      z-index: 0;
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      display: block; pointer-events: none; z-index: 0;
     }
     header, main, footer { position: relative; z-index: 1; }
 
-    /* Header */
+    /* Header and stage navigation */
     header {
       background: var(--bg);
       border-bottom: 1px solid var(--line);
-      padding: 14px 32px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
     }
     .header-wrap {
-      max-width: 1280px;
+      max-width: 1180px;
       margin: 0 auto;
+      padding: 12px 32px 0;
     }
+    .brand-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .brand {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      text-decoration: none;
-      color: var(--fg);
+      font-size: 18px; font-weight: 800; letter-spacing: -0.03em;
+      text-decoration: none; color: var(--fg);
     }
+    .brand-sub { font-size: 12px; color: var(--sub); white-space: nowrap; }
+    .stages {
+      display: flex;
+      gap: 2px;
+      list-style: none;
+      margin-top: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .stages::-webkit-scrollbar { display: none; }
+    .stages a {
+      display: block;
+      white-space: nowrap;
+      padding: 8px 12px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sub);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+    }
+    .stages a .n {
+      display: inline-grid; place-items: center;
+      width: 18px; height: 18px; margin-right: 6px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      font-size: 11px; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .stages a:hover { color: var(--fg); }
+    .stages a[aria-current="step"] { color: var(--fg); border-bottom-color: var(--fg); }
+    .stages a[aria-current="step"] .n { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .stages a.done .n { border-color: var(--accent); color: var(--accent); }
 
-    /* Main: one step at a time */
     main {
       width: 100%;
-      max-width: 680px;
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 48px 32px 56px;
+      padding: 40px 32px 56px;
       flex: 1;
     }
     @media (max-width: 640px) {
-      header { padding: 12px 16px; }
-      main { padding: 28px 16px 40px; }
+      .header-wrap { padding: 10px 16px 0; }
+      .brand-sub { display: none; }
+      main { padding: 24px 16px 40px; }
     }
 
-    /* Progress */
-    .progress { margin-bottom: 16px; }
-    .progress-text {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--sub);
-      margin-bottom: 6px;
+    /* Stage layout */
+    .stage[hidden] { display: none; }
+    .eyebrow {
+      font-size: 13px; font-weight: 600; color: var(--accent);
+      letter-spacing: 0.01em; margin-bottom: 10px;
     }
-    .progress-bg {
-      height: 6px;
-      background: var(--inset);
-      border-radius: 3px;
-      overflow: hidden;
+    .stage h1, .stage h2, .verdict {
+      font-weight: 800; letter-spacing: -0.045em; line-height: 1.06; text-wrap: balance;
     }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--fg);
-      transition: width 0.3s ease;
+    .stage > h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); max-width: 20ch; }
+    .stage > h2 { font-size: clamp(1.9rem, 4.5vw, 2.8rem); max-width: 24ch; }
+    .lead { margin-top: 14px; font-size: 17px; color: var(--sub); max-width: 62ch; }
+    .lead b { color: var(--fg); }
+    h3 { font-size: 16px; font-weight: 700; letter-spacing: -0.015em; }
+    .section { margin-top: 32px; }
+    .grid { display: grid; gap: 16px; }
+    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .span2 { grid-column: span 2; }
+    @media (max-width: 900px) {
+      .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      .g2, .g3, .g4 { grid-template-columns: minmax(0, 1fr); }
+      .span2 { grid-column: auto; }
     }
 
-    /* Step card */
-    .card {
+    .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 32px;
+      padding: 22px;
+      min-width: 0;
     }
-    @media (max-width: 640px) {
-      .card { padding: 24px 20px; }
+    .panel h3 { margin-bottom: 4px; }
+    .panel .note { font-size: 14px; color: var(--sub); margin-top: 6px; }
+    .panel .note b { color: var(--fg); }
+    .muted { color: var(--sub); }
+    .small { font-size: 13px; }
+
+    /* KPI tiles */
+    .kpi .label { font-size: 13px; font-weight: 600; color: var(--sub); }
+    .kpi .value {
+      margin-top: 4px;
+      font-size: clamp(1.8rem, 3.6vw, 2.4rem);
+      font-weight: 800; letter-spacing: -0.04em; line-height: 1.1;
+      font-variant-numeric: tabular-nums;
     }
-    .step[hidden] { display: none; }
-    .step h1, .step h2 {
-      font-weight: 800;
-      letter-spacing: -0.045em;
-      line-height: 1.06;
-      text-wrap: balance;
+    .kpi .value small { font-size: 0.5em; letter-spacing: -0.01em; font-weight: 700; color: var(--sub); }
+    .kpi .foot { margin-top: 6px; font-size: 13px; color: var(--sub); }
+    .kpi.warn { border-color: var(--warn); }
+    .flag {
+      display: inline-block;
+      font-size: 12px; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+      background: var(--warn-bg); color: var(--warn);
     }
-    .step h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); }
-    .step h2 { font-size: clamp(1.7rem, 4.5vw, 2.4rem); }
-    .lead {
+    .ok-flag { background: #DCE8E3; color: var(--accent); }
+
+    /* Callouts */
+    .callout {
+      margin-top: 16px;
+      border-left: 3px solid var(--accent);
+      background: var(--inset);
+      border-radius: 0 6px 6px 0;
+      padding: 14px 18px;
+      font-size: 15px;
+    }
+    .callout.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+    .callout b { font-weight: 700; }
+    details.ask {
+      margin-top: 24px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 15px;
+    }
+    details.ask summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+    details.ask p { margin-top: 8px; color: var(--sub); }
+    details.ask p b { color: var(--fg); }
+
+    /* Code and SQL */
+    .code {
       margin-top: 12px;
-      font-size: 16px;
-      color: var(--sub);
-      max-width: 52ch;
+      background: #0C3B3F;
+      color: #E8EFEC;
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .code .k { color: #9FD3CB; }
+    .code .c { color: #8FA8A4; }
+    .code .s { color: #F2CF9A; }
+    .result {
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 13px;
+      display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;
+    }
+    .result .arrow { color: var(--sub); }
+    .result strong { font-family: var(--font); font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th { font-size: 12px; font-weight: 700; color: var(--sub); }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.id { font-family: var(--mono); font-size: 12px; color: var(--sub); }
+    tr.hl td { background: var(--warn-bg); }
+
+    /* Pills */
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .pill {
+      font-size: 13px; font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-family: var(--mono);
+    }
+    .pill.in { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .pill.out { text-decoration: line-through; color: var(--warn); border-color: var(--warn); background: var(--warn-bg); }
+    .pill.target { border-color: var(--accent); color: var(--accent); }
+
+    /* Flow diagrams */
+    .flow { display: flex; align-items: stretch; gap: 0; margin-top: 16px; flex-wrap: wrap; row-gap: 12px; }
+    .flow .node {
+      flex: 1 1 0;
+      min-width: 130px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 14px;
+    }
+    .flow .node b { display: block; font-size: 15px; }
+    .flow .node span { color: var(--sub); font-size: 13px; }
+    .flow .node.green { border-color: var(--accent); }
+    .flow .node .status { margin-top: 8px; }
+    .flow .join { align-self: center; padding: 0 8px; color: var(--sub); font-weight: 700; }
+    @media (max-width: 640px) {
+      .flow { flex-direction: column; }
+      .flow .join { transform: rotate(90deg); align-self: center; padding: 2px 0; }
+    }
+    a.node { text-decoration: none; color: var(--fg); }
+    a.node:hover { border-color: var(--sub); }
+
+    /* Bars */
+    .bars { margin-top: 14px; display: grid; gap: 8px; }
+    .bar-row { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) 70px; gap: 10px; align-items: center; font-size: 13px; }
+    .bar-row .lab { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-row .track { height: 14px; background: var(--inset); border-radius: 3px; overflow: hidden; }
+    .bar-row .fill { height: 100%; background: var(--accent); border-radius: 3px; }
+    .bar-row.blank .fill { background: var(--warn); }
+    .bar-row.blank .lab { color: var(--warn); font-weight: 700; }
+    .bar-row .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    /* Split bar */
+    .split { display: flex; height: 40px; border-radius: 6px; overflow: hidden; margin-top: 14px; font-size: 13px; font-weight: 700; }
+    .split div { display: flex; align-items: center; justify-content: center; }
+    .split .train { flex: 80; background: var(--fg); color: var(--bg); }
+    .split .test { flex: 20; background: var(--warn-bg); color: var(--warn); }
+
+    /* Ring */
+    .ring-row { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+    .ring { width: 120px; height: 120px; }
+    .ring-cap { font-size: 14px; color: var(--sub); max-width: 26ch; }
+    .ring-cap b { color: var(--fg); }
+
+    /* Segmented toggle */
+    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; margin-top: 16px; flex-wrap: wrap; }
+    .seg button {
+      appearance: none; border: 0; background: none; color: var(--sub);
+      font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    }
+    .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+    /* Confusion matrix */
+    .cm { display: grid; grid-template-columns: 90px 1fr 1fr; gap: 6px; margin-top: 14px; font-size: 13px; }
+    .cm .h { color: var(--sub); font-weight: 600; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .cm .cell { border-radius: 6px; padding: 12px; text-align: center; border: 1px solid var(--line); }
+    .cm .cell b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .cm .good { background: #DCE8E3; }
+    .cm .bad { background: var(--warn-bg); }
+    .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin-top: 16px; }
+    .metric .label { font-size: 13px; color: var(--sub); }
+    .metric .v { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+    /* Staircase */
+    .stairs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: end; margin-top: 16px; }
+    .stairs a { text-decoration: none; color: var(--fg); }
+    .stairs .st { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+    .stairs .st:hover { border-color: var(--sub); }
+    .stairs .st b { display: block; font-size: 15px; }
+    .stairs .st span { font-size: 13px; color: var(--sub); }
+    .stairs .st em { display: block; margin-top: 8px; font-style: normal; font-size: 12px; font-weight: 700; color: var(--accent); }
+    .stairs a:nth-child(1) .st { min-height: 110px; }
+    .stairs a:nth-child(2) .st { min-height: 140px; }
+    .stairs a:nth-child(3) .st { min-height: 170px; border-color: var(--fg); }
+    .stairs a:nth-child(4) .st { min-height: 200px; }
+    @media (max-width: 640px) {
+      .stairs { grid-template-columns: minmax(0, 1fr); }
+      .stairs .st { min-height: 0 !important; }
     }
 
+    figure img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--line); margin-top: 12px; background: #fff; }
+    figcaption { font-size: 13px; color: var(--sub); margin-top: 8px; }
+
     /* Buttons */
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-top: 32px;
-    }
-    .actions.start { justify-content: flex-start; }
     .btn {
       appearance: none;
       background: var(--fg);
@@ -151,192 +338,141 @@
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
     }
-    .btn.ghost {
-      background: none;
-      color: var(--fg);
-      border-color: var(--line);
-    }
+    .btn.ghost { background: none; color: var(--fg); border-color: var(--line); }
     .btn.ghost:hover { border-color: var(--sub); }
     .btn:active { transform: scale(0.98); }
-
-    /* Examples */
-    .examples { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 20px; }
-    .examples-label {
-      font-size: 14px;
-      color: var(--sub);
-      margin-bottom: 10px;
-    }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
-      appearance: none;
-      background: none;
-      border: 1px solid var(--line);
-      color: var(--fg);
-      font-size: 14px;
-      font-weight: 600;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
+      appearance: none; background: none;
+      border: 1px solid var(--line); color: var(--fg);
+      font-size: 14px; font-weight: 600;
+      padding: 8px 14px; border-radius: 6px; cursor: pointer;
     }
     .chip:hover { border-color: var(--sub); }
     .chip:active { transform: scale(0.98); }
 
-    /* Question */
-    .answer {
-      margin-top: 28px;
-      font-size: clamp(2rem, 6vw, 2.8rem);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      font-variant-numeric: tabular-nums;
+    /* Pager between stages */
+    .pager {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line);
     }
-    .slider-input {
-      width: 100%;
-      margin-top: 12px;
-      accent-color: var(--fg);
-      cursor: pointer;
-    }
-    .scale {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--sub);
-      margin-top: 4px;
-    }
-    .hint {
-      margin-top: 16px;
-      font-size: 14px;
-      color: var(--sub);
-    }
-    .hint b { color: var(--fg); font-weight: 600; }
+    .pager .hint { font-size: 12px; color: var(--sub); }
+    @media (max-width: 640px) { .pager .hint { display: none; } }
 
-    /* Result */
-    .verdict {
-      font-size: clamp(2.4rem, 7vw, 3.4rem);
-      font-weight: 800;
-      letter-spacing: -0.045em;
-      line-height: 1.04;
-    }
-    .stage-line {
-      margin-top: 8px;
-      font-size: 15px;
-      color: var(--sub);
-    }
+    /* Predictor (the guided shop-owner flow) */
+    .predictor { max-width: 640px; }
+    .q-progress { margin-bottom: 16px; }
+    .q-progress-text { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: var(--sub); margin-bottom: 6px; }
+    .q-progress-bg { height: 6px; background: var(--inset); border-radius: 3px; overflow: hidden; }
+    .q-progress-bar { height: 100%; width: 0%; background: var(--fg); transition: width 0.3s ease; }
+    .q-step[hidden] { display: none; }
+    .q-step h3 { font-size: clamp(1.5rem, 3.6vw, 2rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; }
+    .q-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 28px; }
+    .q-actions.start { justify-content: flex-start; }
+    .examples { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
+    .examples-label { font-size: 14px; color: var(--sub); margin-bottom: 10px; }
+    .answer { margin-top: 24px; font-size: clamp(2rem, 6vw, 2.8rem); font-weight: 800; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+    .slider-input { width: 100%; margin-top: 12px; accent-color: var(--fg); cursor: pointer; }
+    .scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-top: 4px; }
+    .hint-line { margin-top: 16px; font-size: 14px; color: var(--sub); }
+    .hint-line b { color: var(--fg); font-weight: 600; }
+    .verdict { font-size: clamp(2.2rem, 6vw, 3rem); }
+    .stage-line { margin-top: 8px; font-size: 15px; color: var(--sub); }
     .stage-line b { color: var(--fg); font-weight: 700; }
-    .risk-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-top: 24px;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    .risk-val {
-      font-size: 18px;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-    }
-    .gauge-bg {
-      width: 100%;
-      height: 8px;
-      background: var(--inset);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 8px;
-    }
-    .gauge-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--accent);
-      transition: width 0.3s ease;
-    }
-    .act {
-      display: block;
-      margin-top: 20px;
-      background: var(--inset);
-      border-radius: 6px;
-      padding: 16px 18px;
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-    .act-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: 0;
-      margin-bottom: 4px;
-    }
-
-    /* Try changes */
-    .tweak {
-      margin-top: 28px;
-      border-top: 1px solid var(--line);
-      padding-top: 22px;
-    }
-    .tweak h3 {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.015em;
-      margin-bottom: 14px;
-    }
-    .edit-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: baseline;
-      margin-bottom: 14px;
-      font-size: 14px;
-    }
+    .risk-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 24px; font-size: 14px; font-weight: 500; }
+    .risk-val { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .gauge-bg { width: 100%; height: 8px; background: var(--inset); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .gauge-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease; }
+    .act { display: block; margin-top: 20px; background: var(--inset); border-radius: 6px; padding: 16px 18px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .act-label { display: block; font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0; margin-bottom: 4px; }
+    .tweak { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 22px; }
+    .tweak h4 { font-size: 16px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 14px; }
+    .edit-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; margin-bottom: 14px; font-size: 14px; }
     .edit-row label { font-weight: 500; }
     .edit-val { font-weight: 700; font-variant-numeric: tabular-nums; }
     .edit-row .slider-input { grid-column: 1 / -1; margin-top: 6px; }
-    .whatif-label {
-      font-size: 14px;
-      color: var(--sub);
-      margin: 6px 0 10px;
-    }
+    .whatif-label { font-size: 14px; color: var(--sub); margin: 6px 0 10px; }
+    .predict-layout { display: grid; grid-template-columns: minmax(0, 640px) minmax(0, 1fr); gap: 16px; align-items: start; margin-top: 32px; }
+    @media (max-width: 1000px) { .predict-layout { grid-template-columns: minmax(0, 1fr); } }
 
-    /* About */
-    .about {
-      margin-top: 24px;
-      font-size: 14px;
-      color: var(--sub);
+    /* Terminal replay */
+    .term {
+      margin-top: 12px; background: #0A2F32; color: #DCE8E3; border-radius: 6px;
+      padding: 14px 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+      height: 230px; overflow-y: auto; white-space: pre-wrap; word-break: break-word;
     }
-    .about summary {
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--fg);
-    }
-    .about p { margin-top: 10px; }
-    .about b { color: var(--fg); font-weight: 600; }
+    .term .ok { color: #9FD3CB; }
+    .term .dim { color: #7F9A96; }
+    .term .warnl { color: #F2CF9A; }
+    .run-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 16px; }
+    .run-row .status-text { font-size: 14px; color: var(--sub); }
+    .prog { height: 6px; background: var(--inset); border-radius: 3px; overflow: hidden; margin-top: 12px; }
+    .prog > div { height: 100%; width: 0%; background: var(--accent); transition: width 0.25s ease; }
 
-    /* Footer */
-    footer {
-      background: var(--bg);
-      border-top: 1px solid var(--line);
-      padding: 18px 32px;
+    /* File cards */
+    .files { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    @media (max-width: 900px) { .files { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 520px) { .files { grid-template-columns: minmax(0, 1fr); } }
+    .file { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font-size: 13px; background: var(--panel); min-width: 0; }
+    .file .fn { font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+    .file .fs { color: var(--sub); font-size: 12px; margin-top: 2px; }
+    .file.loading { border-color: var(--warn); }
+    .file.loaded { border-color: var(--accent); }
+    .file.loaded .fs { color: var(--accent); font-weight: 600; }
+
+    /* Airflow task states */
+    .flow .node[data-state="queued"] { opacity: 0.75; }
+    .flow .node[data-state="running"] { border-color: var(--warn); }
+    .flow .node[data-state="success"] { border-color: var(--accent); }
+    .st-badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--inset); color: var(--sub); }
+    [data-state="running"] .st-badge { background: var(--warn-bg); color: var(--warn); }
+    [data-state="success"] .st-badge { background: #DCE8E3; color: var(--accent); }
+
+    /* Cleaning rules stepper */
+    .rule-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+    .rule-tabs button {
+      appearance: none; background: none; border: 1px solid var(--line); color: var(--fg);
+      border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
     }
+    .rule-tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+    .rule[hidden] { display: none; }
+    .before-after { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: start; margin-top: 14px; }
+    .before-after .arrow-mid { align-self: center; font-weight: 800; color: var(--sub); }
+    @media (max-width: 800px) {
+      .before-after { grid-template-columns: minmax(0, 1fr); }
+      .before-after .arrow-mid { transform: rotate(90deg); justify-self: center; }
+    }
+    .ba-label { font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 4px; }
+    .ba-label.raw { color: var(--warn); }
+    .ba-label.clean { color: var(--accent); }
+    td.bad { background: var(--warn-bg); color: var(--warn); font-weight: 600; }
+    td.fixed { background: #DCE8E3; color: var(--accent); font-weight: 600; }
+    .tests { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; margin-top: 12px; font-family: var(--mono); font-size: 12px; }
+    @media (max-width: 640px) { .tests { grid-template-columns: minmax(0, 1fr); } }
+    .tests .t { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted var(--line); padding: 3px 0; min-width: 0; }
+    .tests .t span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tests .pass { color: var(--accent); font-weight: 700; }
+    .tests .pend { color: var(--sub); }
+
+    .company { border-color: var(--fg); }
+    .company-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; }
+    @media (max-width: 640px) { .company-row { grid-template-columns: minmax(0, 1fr); } }
+
+    footer { background: var(--bg); border-top: 1px solid var(--line); padding: 18px 32px; }
     .footer-wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      font-size: 12px;
-      color: var(--sub);
+      max-width: 1180px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+      font-size: 12px; color: var(--sub);
     }
-    .built-by {
-      color: var(--fg);
-      font-weight: 600;
-      text-decoration: none;
-    }
+    .built-by { color: var(--fg); font-weight: 600; text-decoration: none; }
     .built-by:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
+      html { scroll-behavior: auto; }
     }
   </style>
 </head>
@@ -344,139 +480,810 @@
 
   <header>
     <div class="header-wrap">
-      <a href="/" class="brand">Customer Analytics</a>
+      <div class="brand-row">
+        <a href="#story" class="brand">Customer Analytics</a>
+        <span class="brand-sub">From data to intelligence. From intelligence to impact.</span>
+      </div>
+      <nav aria-label="Stages">
+        <ol class="stages" id="stage-nav"></ol>
+      </nav>
     </div>
   </header>
 
   <main>
 
-    <div class="progress" id="progress" hidden>
-      <div class="progress-text"><span id="p-label"></span><span id="p-count"></span></div>
-      <div class="progress-bg"><div class="progress-bar" id="p-bar"></div></div>
-    </div>
+    <!-- ===================== STORY ===================== -->
+    <section class="stage" data-stage="story" data-title="Story">
+      <p class="eyebrow">Customer Analytics and Prediction Platform</p>
+      <h1 tabindex="-1">Who is going to leave next, before they leave?</h1>
+      <p class="lead">An online marketplace is losing customers quietly. They do not complain, they simply stop buying. This platform follows one record from nine raw files all the way to a live prediction and a manager's dashboard, built on <b>99,441 real orders</b> from Olist, a Brazilian marketplace (2016 to 2018).</p>
 
-    <!-- 0. Welcome -->
-    <section class="step card" data-step="0">
-      <h1 tabindex="-1">Will this customer leave?</h1>
-      <p class="lead">Answer three quick questions about one of your customers. You will see if they are likely to stop buying and what to do about it. Then change the answers to see what would make them stay.</p>
-      <div class="actions start">
-        <button class="btn" onclick="go(1)">Start</button>
+      <div class="grid g4 section">
+        <div class="panel kpi"><div class="label">Orders</div><div class="value">99,441</div><div class="foot">2016 to 2018</div></div>
+        <div class="panel kpi"><div class="label">Real people</div><div class="value">96,096</div><div class="foot">not 99,441 customer IDs</div></div>
+        <div class="panel kpi"><div class="label">Bought exactly once</div><div class="value">97%</div><div class="foot">the real problem</div></div>
+        <div class="panel kpi"><div class="label">Churn rate</div><div class="value">64.7%</div><div class="foot">no order in 120 days</div></div>
       </div>
-      <div class="examples">
-        <div class="examples-label">Or see an example customer</div>
-        <div class="chips">
-          <button class="chip" onclick="useExample(10, 1, 80)">New customer</button>
-          <button class="chip" onclick="useExample(35, 3, 390)">Loyal customer</button>
-          <button class="chip" onclick="useExample(15, 6, 1250)">VIP customer</button>
-          <button class="chip" onclick="useExample(450, 1, 45)">Inactive customer</button>
+
+      <div class="panel section company">
+        <div class="company-row">
+          <div>
+            <p class="eyebrow" style="margin:0 0 4px">Real company, real data</p>
+            <h3 style="font-size:22px;letter-spacing:-0.03em">Olist <span class="muted" style="font-weight:600;font-size:15px">· Brazilian e-commerce marketplace, São Paulo</span></h3>
+            <p class="note">Olist connects small shops to Brazil's large online marketplaces. It released anonymised data from about 100,000 of its orders (September 2016 to October 2018) as a public dataset. Customer names were removed; customers and sellers appear only as random codes.</p>
+          </div>
+          <div class="chips" style="align-content:start">
+            <a class="chip" style="text-decoration:none" href="https://olist.com" target="_blank" rel="noopener">olist.com ↗</a>
+            <a class="chip" style="text-decoration:none" href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" rel="noopener">Dataset on Kaggle ↗</a>
+          </div>
+        </div>
+        <p class="note small">Brazilian E-Commerce Public Dataset by Olist · licence CC BY-NC-SA 4.0 · amounts in Brazilian reais (R$).</p>
+      </div>
+
+      <div class="section">
+        <h3>Four ways to understand a business, all in this platform</h3>
+        <div class="stairs">
+          <a href="#dashboard"><div class="st"><b>Descriptive</b><span>What happened? Revenue, orders, the Black Friday spike.</span><em>Step 8 · Dashboard</em></div></a>
+          <a href="#patterns"><div class="st"><b>Diagnostic</b><span>Why? 97% of customers never come back.</span><em>Step 4 · Patterns</em></div></a>
+          <a href="#train"><div class="st"><b>Predictive</b><span>What may happen? Which customer will churn.</span><em>Steps 5 to 6 · Model</em></div></a>
+          <a href="#predict"><div class="st"><b>Prescriptive</b><span>What should we do? A suggested action for each customer.</span><em>Step 7 · Predict</em></div></a>
         </div>
       </div>
-      <details class="about">
-        <summary>What is this?</summary>
-        <p>Shops lose money when customers quietly stop buying. This is called <b>churn</b>. Spotting those customers early gives you a chance to win them back.</p>
-        <p>The prediction comes from a machine learning model trained on 99,441 real orders from Olist, an online marketplace in Brazil. That is why amounts are in Brazilian reais (R$).</p>
-        <p>It is a demo, so the results are a guide, not a guarantee. Nothing you enter here is stored.</p>
+
+      <div class="section">
+        <h3>The journey: the machine learning lifecycle, one step at a time</h3>
+        <div class="flow" id="journey"></div>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>If you saw this tomorrow morning, what would you do? <b>Ask them why, give discounts, find out who is next.</b> Every answer needs data about customers. That is why we are here.</p>
       </details>
     </section>
 
-    <!-- 1. Last purchase -->
-    <section class="step card" data-step="1" hidden>
-      <h2 tabindex="-1">When did they last buy from you?</h2>
-      <div class="answer" id="v-rec">30 days ago</div>
-      <input type="range" class="slider-input" id="s-rec" min="1" max="600" value="30" aria-label="Days since their last order" oninput="setField('rec', this.value)">
-      <div class="scale"><span>Yesterday</span><span>Over a year ago</span></div>
-      <div class="actions">
-        <button class="btn ghost" onclick="go(0)">Back</button>
-        <button class="btn" onclick="go(2)">Next</button>
+    <!-- ===================== 1. INGEST ===================== -->
+    <section class="stage" data-stage="ingest" data-title="Ingest" data-step="1" hidden>
+      <p class="eyebrow">Step 1 of 8 · Collect the data: ingestion</p>
+      <h2 tabindex="-1">Nine CSV files in. Nine raw tables out.</h2>
+      <p class="lead">The marketplace exports its data as nine separate files: orders, customers, payments, products, reviews, sellers and more. Ingestion copies each one into PostgreSQL <b>exactly as it is</b>. No cleaning yet: that is the <b>E and L</b> in ELT.</p>
+
+      <div class="panel section company">
+        <div class="company-row">
+          <div>
+            <p class="eyebrow" style="margin:0 0 4px">Real company, real data</p>
+            <h3 style="font-size:22px;letter-spacing:-0.03em">Olist <span class="muted" style="font-weight:600;font-size:15px">· Brazilian e-commerce marketplace, São Paulo</span></h3>
+            <p class="note">Olist connects small shops to Brazil's large online marketplaces. It released anonymised data from about 100,000 of its orders (September 2016 to October 2018) as a public dataset. Customer names were removed; customers and sellers appear only as random codes.</p>
+          </div>
+          <div class="chips" style="align-content:start">
+            <a class="chip" style="text-decoration:none" href="https://olist.com" target="_blank" rel="noopener">olist.com ↗</a>
+            <a class="chip" style="text-decoration:none" href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" rel="noopener">Dataset on Kaggle ↗</a>
+          </div>
+        </div>
+        <p class="note small">Brazilian E-Commerce Public Dataset by Olist · licence CC BY-NC-SA 4.0 · amounts in Brazilian reais (R$).</p>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>data/raw/ → PostgreSQL</h3>
+        <div class="files" id="files"></div>
+        <div class="prog"><div id="ing-prog"></div></div>
+        <div class="run-row">
+          <button class="btn" id="ing-run" type="button">Run ingestion</button>
+          <span class="status-text" id="ing-status">9 files waiting · 0 rows loaded</span>
+        </div>
+        <div class="term" id="ing-term" aria-live="polite"><span class="dim">$ python src/ingestion.py</span>
+</div>
+        <p class="note">A replay of the real run: same files, same row counts, same log lines as <code>src/ingestion.py</code>.</p>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="panel">
+          <h3>src/ingestion.py</h3>
+          <div class="code"><span class="k">for</span> file <span class="k">in</span> DATA_PATH.glob(<span class="s">"*.csv"</span>):
+    table_name = file.stem
+    print(<span class="s">f"Loading {table_name}"</span>)
+    df = pd.read_csv(file)
+    df.to_sql(table_name, engine,
+              if_exists=<span class="s">"replace"</span>, index=<span class="k">False</span>)
+    print(<span class="s">f"{table_name} loaded: {len(df)} rows"</span>)</div>
+          <p class="note">One table per file, named after the file. <code>replace</code> means every daily run starts from a fresh copy of the source.</p>
+        </div>
+        <div class="panel">
+          <h3>Where this sits in the pipeline</h3>
+          <div class="flow">
+            <div class="node green"><b>Sources</b><span>9 CSV exports</span></div>
+            <div class="join">→</div>
+            <div class="node green"><b>Ingestion</b><span>Python + pandas</span></div>
+            <div class="join">→</div>
+            <div class="node green"><b>Storage</b><span>PostgreSQL 16</span></div>
+          </div>
+          <p class="note">Like Ravi's record: the same data from start to end, only its quality improves along the way. Airflow runs this as its first task, <code>data_ingestion</code>, every night.</p>
+        </div>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>What are the equivalent systems in your own institution? <b>Admissions, the library, the LMS, the fee portal, attendance, the exam cell.</b> Each one is a file like these.</p>
+      </details>
+    </section>
+
+    <!-- ===================== 2. EXPLORE ===================== -->
+    <section class="stage" data-stage="data" data-title="Explore" data-step="2" hidden>
+      <p class="eyebrow">Step 2 of 8 · Explore the raw data</p>
+      <h2 tabindex="-1">Before cleaning, find out what is wrong</h2>
+      <p class="lead">The raw tables are loaded, but are they ready for decisions? Ask them simple questions and the problems from the slide appear in real data: a <b>duplicate</b>, <b>missing values</b>, and <b>inconsistent formats</b>. Customers appear only as random codes, never names.</p>
+
+      <div class="grid g2 section">
+        <div class="grid" style="align-content:start">
+          <div class="panel">
+            <h3>How many orders?</h3>
+            <div class="code"><span class="k">SELECT</span> COUNT(*) <span class="k">FROM</span> olist_orders_dataset;</div>
+            <div class="result"><span class="arrow">→</span><strong>99,441</strong> orders</div>
+          </div>
+          <div class="panel kpi warn">
+            <h3>How many customers does this shop have? <span class="flag">Duplicate</span></h3>
+            <div class="code"><span class="k">SELECT</span> COUNT(customer_id) <span class="k">AS</span> customer_ids,
+       COUNT(<span class="k">DISTINCT</span> customer_unique_id) <span class="k">AS</span> real_people
+<span class="k">FROM</span> olist_customers_dataset;</div>
+            <div class="result"><span class="arrow">→</span><strong>99,441</strong> IDs <span class="arrow">vs</span> <strong>96,096</strong> real people</div>
+            <p class="note">The marketplace gives the same person a <b>new customer ID for every order</b>. Count the wrong column and every churn number is wrong. This is Customer 101 appearing twice, in real life.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="panel">
+          <h3>Missing values: orders never delivered <span class="flag">Missing</span></h3>
+          <div class="code"><span class="k">SELECT</span> COUNT(*) - COUNT(order_delivered_customer_date)
+<span class="k">FROM</span> olist_orders_dataset;</div>
+          <div class="result"><span class="arrow">→</span><strong>2,965</strong> orders with no delivery date</div>
+          <p class="note">Some are legitimate (a cancelled order is never delivered). Others are genuine gaps. Cleaning means deciding which is which.</p>
+        </div>
+        <div class="panel">
+          <h3>Products with no category <span class="flag">Missing</span></h3>
+          <div class="code"><span class="k">SELECT</span> COUNT(*) <span class="k">FROM</span> olist_products_dataset
+<span class="k">WHERE</span> product_category_name <span class="k">IS NULL</span>;</div>
+          <div class="result"><span class="arrow">→</span><strong>610</strong> products</div>
+          <p class="note">Watch for these again. They reach the final dashboard as a bar labelled <b>(Blank)</b>.</p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Format problem: dates stored as text <span class="flag">Inconsistent format</span></h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Column</th><th>Raw type</th><th>Raw value</th><th>After cleaning</th></tr></thead>
+            <tbody>
+              <tr><td>order_purchase_timestamp</td><td>text</td><td class="id">'2017-10-02 10:56:33'</td><td>purchase_date · timestamp</td></tr>
+              <tr><td>order_delivered_customer_date</td><td>text</td><td class="id">'2017-10-10 21:25:13' or empty</td><td>delivery_date · timestamp</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>How many customers does this shop have? Let people guess before you run the query. Then: <b>"What are the equivalent systems in your own institution?"</b> Admissions, library, LMS, fee portal, attendance, exam cell.</p>
+      </details>
+    </section>
+
+    <!-- ===================== 2. CLEAN ===================== -->
+    <section class="stage" data-stage="clean" data-title="Clean" data-step="3" hidden>
+      <p class="eyebrow">Step 3 of 8 · Clean and prepare the data</p>
+      <h2 tabindex="-1">Airflow decides when. dbt decides how.</h2>
+      <p class="lead">Every night at midnight, with no human involved, the pipeline loads the raw files, cleans them with plain SQL, and tests the result. If tomorrow's data breaks a rule, the pipeline turns red <b>before</b> a wrong number reaches a manager.</p>
+
+      <div class="panel section">
+        <h3>Airflow DAG · <code>customer_analytics_pipeline</code> · schedule <code>@daily</code></h3>
+        <div class="flow" id="dag">
+          <div class="node" data-task="ingest" data-state="queued"><b>data_ingestion</b><span>python src/ingestion.py</span><div class="status"><span class="st-badge">queued</span></div></div>
+          <div class="join">→</div>
+          <div class="node" data-task="run" data-state="queued"><b>dbt_transform</b><span>dbt run</span><div class="status"><span class="st-badge">queued</span></div></div>
+          <div class="join">→</div>
+          <div class="node" data-task="test" data-state="queued"><b>dbt_test</b><span>dbt test</span><div class="status"><span class="st-badge">queued</span></div></div>
+        </div>
+        <div class="run-row">
+          <button class="btn" id="dag-run" type="button">Trigger DAG</button>
+          <span class="status-text" id="dag-status">Next scheduled run: midnight</span>
+        </div>
+        <div class="term" id="dag-term" aria-live="polite"><span class="dim">Airflow task logs appear here.</span>
+</div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>ELT: the raw ingredients stay in the fridge</h3>
+        <p class="note">Clean tables are built <b>beside</b> the raw tables, never on top of them. Change a cleaning rule next month and rebuild everything from the originals.</p>
+        <div class="flow">
+          <div class="node"><b>Raw</b><span>9 Olist tables, exactly as loaded</span></div>
+          <div class="join">→</div>
+          <div class="node"><b>Staging</b><span>stg_orders · stg_customers · stg_order_items · stg_products · stg_reviews</span></div>
+          <div class="join">→</div>
+          <div class="node"><b>Marts</b><span>fact_orders · mart_customer_rfm · mart_customer_segments · mart_daily_sales · mart_product_performance · mart_sales_summary</span></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>The same data, before and after processing</h3>
+        <p class="note">One real order as it arrives from Olist, then as the pipeline leaves it. Toggle to compare.</p>
+        <div class="seg" role="group" aria-label="Before or after processing">
+          <button type="button" aria-pressed="true" data-ba="before">Before · raw</button>
+          <button type="button" aria-pressed="false" data-ba="after">After · processed</button>
+        </div>
+        <div data-ba-view="before">
+          <div class="ba-label raw" style="margin-top:14px">olist_orders_dataset · 8 columns, dates stored as text</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>order_id</th><th>customer_id</th><th>order_status</th><th>order_purchase_timestamp</th><th>order_approved_at</th><th>order_delivered_carrier_date</th><th>order_delivered_customer_date</th><th>order_estimated_delivery_date</th></tr></thead>
+            <tbody><tr><td class="id">e481f51cbdc54678b7cc49136f2d6af7</td><td class="id bad">9ef432eb6251297304e76186b10a928d</td><td>delivered</td><td class="bad">'2017-10-02 10:56:33'</td><td>'2017-10-02 11:07:15'</td><td>'2017-10-04 19:55:00'</td><td class="bad">'2017-10-10 21:25:13'</td><td>'2017-10-18 00:00:00'</td></tr></tbody>
+          </table></div>
+          <p class="note">Problems: the customer is an <b>order-level ID</b>, not a person; dates are <b>text</b>; columns the analysis never uses are mixed in. Spread across 9 tables and 1.55 million rows.</p>
+        </div>
+        <div data-ba-view="after" hidden>
+          <div class="ba-label clean" style="margin-top:14px">stg_orders · 5 columns, clear names, real types</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>order_id</th><th>customer_id</th><th>order_status</th><th>purchase_date</th><th>delivery_date</th></tr></thead>
+            <tbody><tr><td class="id">e481f51cbdc54678b7cc49136f2d6af7</td><td class="id">9ef432eb6251297304e76186b10a928d</td><td>delivered</td><td class="fixed">2017-10-02 10:56:33</td><td class="fixed">2017-10-10 21:25:13</td></tr></tbody>
+          </table></div>
+          <div class="ba-label clean" style="margin-top:14px">mart_customer_rfm · one row per real person, ready for the model</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>customer_unique_id</th><th class="num">recency</th><th class="num">frequency</th><th class="num">monetary</th><th class="num">avg_order_value</th><th class="num">customer_lifetime_days</th><th class="num">churn</th></tr></thead>
+            <tbody>
+              <tr><td class="id">cb4253d36367737b6baa4f8ca58fac62</td><td class="num fixed">29</td><td class="num fixed">2</td><td class="num fixed">116.90</td><td class="num">58.45</td><td class="num">323</td><td class="num">0</td></tr>
+              <tr><td class="id">52ee6d0a8f1b786485a5bd366aa2137c</td><td class="num fixed">267</td><td class="num fixed">1</td><td class="num fixed">89.90</td><td class="num">89.90</td><td class="num">0</td><td class="num"><b>1</b></td></tr>
+            </tbody>
+          </table></div>
+          <div class="flow">
+            <div class="node"><b>Before</b><span>9 tables · 1,550,922 rows · text dates · 99,441 customer IDs</span></div>
+            <div class="join">→</div>
+            <div class="node green"><b>After</b><span>5 staging models · 6 marts · 18 passing tests · 75,387 people ready for ML</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Cleaning, rule by rule</h3>
+        <p class="note">Each rule is a few lines of SQL in a dbt model. Raw on the left, clean on the right.</p>
+        <div class="rule-tabs" role="tablist" id="rule-tabs">
+          <button role="tab" aria-selected="true" data-rule="0">1 · Fix formats</button>
+          <button role="tab" aria-selected="false" data-rule="1">2 · One person, one ID</button>
+          <button role="tab" aria-selected="false" data-rule="2">3 · Keep valid orders</button>
+          <button role="tab" aria-selected="false" data-rule="3">4 · Missing values</button>
+          <button role="tab" aria-selected="false" data-rule="4">5 · One row per person</button>
+        </div>
+
+        <div class="rule" data-rule="0">
+          <p class="note"><b>stg_orders.</b> Dates arrive as text. A computer cannot subtract text, so recency would be impossible. Rename the columns and cast them to real timestamps.</p>
+          <div class="before-after">
+            <div><div class="ba-label raw">RAW · olist_orders_dataset</div><div class="table-wrap"><table>
+              <thead><tr><th>order_purchase_timestamp</th><th>type</th></tr></thead>
+              <tbody><tr><td class="bad">'2017-10-02 10:56:33'</td><td class="bad">text</td></tr>
+              <tr><td class="bad">'2018-07-24 20:41:37'</td><td class="bad">text</td></tr></tbody></table></div></div>
+            <div class="arrow-mid">→</div>
+            <div><div class="ba-label clean">CLEAN · stg_orders</div><div class="table-wrap"><table>
+              <thead><tr><th>purchase_date</th><th>type</th></tr></thead>
+              <tbody><tr><td class="fixed">2017-10-02 10:56:33</td><td class="fixed">timestamp</td></tr>
+              <tr><td class="fixed">2018-07-24 20:41:37</td><td class="fixed">timestamp</td></tr></tbody></table></div></div>
+          </div>
+          <div class="code">order_purchase_timestamp::<span class="k">timestamp</span> <span class="k">as</span> purchase_date</div>
+        </div>
+
+        <div class="rule" data-rule="1" hidden>
+          <p class="note"><b>mart_customer_rfm.</b> Each order gets a new <code>customer_id</code>, so one person who buys twice looks like two customers. Join every order to <code>customer_unique_id</code> and count people, not IDs. Example shape, IDs shortened.</p>
+          <div class="before-after">
+            <div><div class="ba-label raw">RAW · counted by customer_id</div><div class="table-wrap"><table>
+              <thead><tr><th>order</th><th>customer_id</th></tr></thead>
+              <tbody><tr><td class="id">order A</td><td class="bad">id_7f3a…</td></tr>
+              <tr><td class="id">order B</td><td class="bad">id_c91e…</td></tr></tbody></table></div>
+              <p class="note">2 "customers"</p></div>
+            <div class="arrow-mid">→</div>
+            <div><div class="ba-label clean">CLEAN · grouped by customer_unique_id</div><div class="table-wrap"><table>
+              <thead><tr><th>customer_unique_id</th><th class="num">frequency</th></tr></thead>
+              <tbody><tr><td class="fixed">cb4253d36367…ac62</td><td class="num fixed">2</td></tr></tbody></table></div>
+              <p class="note">1 person who bought twice</p></div>
+          </div>
+          <div class="code"><span class="k">left join</span> {{ ref(<span class="s">'stg_customers'</span>) }} c <span class="k">on</span> o.customer_id = c.customer_id
+...
+<span class="k">group by</span> co.customer_unique_id   <span class="c">-- 99,441 IDs become 96,096 people</span></div>
+        </div>
+
+        <div class="rule" data-rule="2" hidden>
+          <p class="note"><b>mart_customer_rfm.</b> Only delivered orders count as purchases, and only before the reference date, so the model never sees the future.</p>
+          <div class="flow">
+            <div class="node"><b>99,441</b><span>raw orders, every status</span></div>
+            <div class="join">→</div>
+            <div class="node"><b>96,478</b><span>status = 'delivered'</span></div>
+            <div class="join">→</div>
+            <div class="node green"><b>before 1 June 2018</b><span>purchase_date &lt; snapshot</span></div>
+          </div>
+          <div class="code"><span class="k">where</span> o.order_status = <span class="s">'delivered'</span>
+  <span class="k">and</span> o.purchase_date &lt; <span class="s">'2018-06-01'</span></div>
+        </div>
+
+        <div class="rule" data-rule="3" hidden>
+          <p class="note">Missing does not always mean wrong. Decide, then <b>document</b> the decision. Flag, don't silently delete.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Gap</th><th class="num">Rows</th><th>Decision</th></tr></thead>
+            <tbody>
+              <tr><td>Order with no delivery date</td><td class="num">2,965</td><td>Legitimate when cancelled or still in transit. Excluded by the "delivered" rule.</td></tr>
+              <tr><td>Product with no category</td><td class="num">610</td><td>Kept, shown as <b>(Blank)</b> so a manager can see the gap.</td></tr>
+              <tr><td>Customer missing from a join</td><td class="num">tested</td><td><code>not_null</code> tests on keys turn the pipeline red.</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        <div class="rule" data-rule="4" hidden>
+          <p class="note"><b>mart_customer_rfm.</b> Thousands of order rows become one row per real person, with the three RFM signals and the churn label.</p>
+          <div class="before-after">
+            <div><div class="ba-label raw">ORDER LEVEL · stg_orders + stg_order_items</div><div class="table-wrap"><table>
+              <thead><tr><th>person</th><th>purchase_date</th><th class="num">order_value</th></tr></thead>
+              <tbody><tr><td class="id">cb4253d36367…</td><td>first order</td><td class="num">≈ R$ 58</td></tr>
+              <tr><td class="id">cb4253d36367…</td><td>323 days later</td><td class="num">≈ R$ 58</td></tr></tbody></table></div></div>
+            <div class="arrow-mid">→</div>
+            <div><div class="ba-label clean">PERSON LEVEL · mart_customer_rfm</div><div class="table-wrap"><table>
+              <thead><tr><th class="num">recency</th><th class="num">frequency</th><th class="num">monetary</th><th class="num">churn</th></tr></thead>
+              <tbody><tr><td class="num fixed">29</td><td class="num fixed">2</td><td class="num fixed">116.90</td><td class="num fixed">0</td></tr></tbody></table></div></div>
+          </div>
+          <div class="code"><span class="k">count</span>(<span class="k">distinct</span> order_id) <span class="k">as</span> frequency,
+<span class="k">sum</span>(order_value)          <span class="k">as</span> monetary,
+<span class="s">'2018-06-01'</span>::date - last_purchase_date::date <span class="k">as</span> recency,
+<span class="k">case when</span> recency &gt; 120 <span class="k">then</span> 1 <span class="k">else</span> 0 <span class="k">end as</span> churn   <span class="c">-- 75,387 rows</span></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>dbt test results <span class="st-badge" id="tests-summary">not run yet</span></h3>
+        <div class="tests" id="tests"></div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="panel">
+          <h3>stg_orders.sql: what cleaning looks like</h3>
+          <div class="code"><span class="k">select</span>
+    order_id,
+    customer_id,
+    order_status,
+    order_purchase_timestamp::<span class="k">timestamp</span> <span class="k">as</span> purchase_date,
+    order_delivered_customer_date::<span class="k">timestamp</span> <span class="k">as</span> delivery_date
+<span class="k">from</span> {{ source(<span class="s">'ecommerce'</span>, <span class="s">'olist_orders_dataset'</span>) }}</div>
+          <p class="note">Pick the useful columns, give them clear names, turn text into real dates. The format fix from the raw table.</p>
+        </div>
+        <div class="panel">
+          <h3>schema.yml: automatic data-quality tests</h3>
+          <div class="code">- <span class="k">name</span>: stg_orders
+  <span class="k">columns</span>:
+    - <span class="k">name</span>: order_id
+      <span class="k">tests</span>:
+        - unique      <span class="c"># no order twice</span>
+        - not_null    <span class="c"># never empty</span>
+    - <span class="k">name</span>: customer_id
+      <span class="k">tests</span>:
+        - not_null</div>
+          <p class="note">Unique and not-null tests run on orders, customers, products and order items. Great Expectations adds row-count and null checks on the raw orders.</p>
+        </div>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>What could go wrong at each stage? <b>The source sends the wrong format, a load fails halfway, the cleaning has a bug.</b> Each one is why the test box exists.</p>
+      </details>
+    </section>
+
+    <!-- ===================== 3. PATTERNS ===================== -->
+    <section class="stage" data-stage="patterns" data-title="Patterns" data-step="4" hidden>
+      <p class="eyebrow">Step 4 of 8 · Discover customer patterns</p>
+      <h2 tabindex="-1">One row per real person, and a surprise</h2>
+      <p class="lead">The mart <code>mart_customer_rfm</code> turns orders into <b>Recency, Frequency, Monetary</b>: three signals retailers have trusted for decades. The last column is the target we want to predict.</p>
+
+      <div class="panel section">
+        <h3>public_analytics.mart_customer_rfm</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>customer_unique_id</th><th class="num">recency (days)</th><th class="num">frequency</th><th class="num">monetary (R$)</th><th class="num">avg_order_value</th><th class="num">churn</th></tr></thead>
+            <tbody>
+              <tr><td class="id">52ee6d0a8f1b…2137c</td><td class="num">267</td><td class="num">1</td><td class="num">89.90</td><td class="num">89.90</td><td class="num"><b>1</b></td></tr>
+              <tr><td class="id">a96d7918dd2a…31dd</td><td class="num">103</td><td class="num">1</td><td class="num">69.00</td><td class="num">69.00</td><td class="num">0</td></tr>
+              <tr><td class="id">cb4253d36367…ac62</td><td class="num">29</td><td class="num">2</td><td class="num">116.90</td><td class="num">58.45</td><td class="num">0</td></tr>
+              <tr><td class="id">c011547921af…c4f4</td><td class="num">70</td><td class="num">1</td><td class="num">59.90</td><td class="num">59.90</td><td class="num">0</td></tr>
+              <tr><td class="id">adb359c7a3a7…be7f</td><td class="num">206</td><td class="num">1</td><td class="num">57.31</td><td class="num">57.31</td><td class="num"><b>1</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><b>The churn rule.</b> Reference date: 1 June 2018. A customer who has not bought anything in the 120 days before that date has churned (<code>churn = 1</code>).</div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="panel">
+          <h3>How many times did each person buy?</h3>
+          <div class="code"><span class="k">SELECT</span> frequency, COUNT(*) <span class="k">FROM</span> mart_customer_rfm
+<span class="k">GROUP BY</span> frequency <span class="k">ORDER BY</span> frequency;</div>
+          <div class="bars" id="freq-bars"></div>
+          <p class="note"><b>97.0%</b> of 75,387 customers bought exactly once. This shop's problem is not attracting customers. It is that they never come back.</p>
+        </div>
+        <div class="panel">
+          <h3>Churn rate: the slide said 10%</h3>
+          <div class="code"><span class="k">SELECT</span> ROUND(AVG(churn) * 100, 1) <span class="k">FROM</span> mart_customer_rfm;</div>
+          <div class="ring-row">
+            <svg class="ring" viewBox="0 0 42 42" role="img" aria-label="64.7 percent churn">
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E9E3D5" stroke-width="5"/>
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#0C6B70" stroke-width="5" stroke-dasharray="64.7 35.3" stroke-dashoffset="25"/>
+              <text x="21" y="23.5" text-anchor="middle" font-size="8" font-weight="800" fill="#0C3B3F">64.7%</text>
+            </svg>
+            <p class="ring-cap"><b>48,804 of 75,387</b> customers churned. For a marketplace where most people buy once, that is normal. Remember this number in step 6.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Who stayed and who left: the medians</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th class="num">Days since last order</th><th class="num">Orders</th><th class="num">Total spent</th><th class="num">Per order</th></tr></thead>
+            <tbody>
+              <tr><td>Stayed (26,583)</td><td class="num">61</td><td class="num">1</td><td class="num">R$ 89.99</td><td class="num">R$ 89.15</td></tr>
+              <tr><td>Churned (48,804)</td><td class="num">249</td><td class="num">1</td><td class="num">R$ 89.00</td><td class="num">R$ 85.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Recency separates the groups completely, because the label is built from it. Spending barely differs. Keep that in mind when the model is graded.</p>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>If you were the CEO and saw that 97% of customers buy only once, what would you do first? <b>A discount on the second order, a welcome email, a loyalty programme.</b> That is prescriptive analytics.</p>
+      </details>
+    </section>
+
+    <!-- ===================== 4. TRAIN ===================== -->
+    <section class="stage" data-stage="train" data-title="Train" data-step="5" hidden>
+      <p class="eyebrow">Step 5 of 8 · Choose features, split, train</p>
+      <h2 tabindex="-1">Practice on 60,309 customers. Keep 15,078 for the exam.</h2>
+      <p class="lead">A Random Forest studies past customers whose answer is known (churned or stayed), the way a student studies ten years of past papers. This is <b>supervised classification</b>.</p>
+
+      <div class="grid g2 section">
+        <div class="panel">
+          <h3>Features: what the model is allowed to see</h3>
+          <div class="pill-row">
+            <span class="pill in">frequency</span>
+            <span class="pill in">monetary</span>
+            <span class="pill in">avg_order_value</span>
+            <span class="pill in">customer_lifetime_days</span>
+            <span class="pill out">recency</span>
+            <span class="pill target">churn (target)</span>
+          </div>
+          <div class="callout warn"><b>Why leave out recency?</b> The churn label <i>is</i> "recency over 120 days". In all 75,387 rows, recency &gt; 120 matches churn = 1 exactly. Give the model recency and it simply rediscovers our own rule: about <b>99.8% accuracy</b>, and nothing learned. That is <b>data leakage</b>: printing the answer key inside the question paper.</div>
+        </div>
+        <div class="panel">
+          <h3>The 80/20 split: <code>test_size=0.2</code></h3>
+          <div class="split" role="img" aria-label="60,309 practice, 15,078 exam">
+            <div class="train">Practice · 60,309</div>
+            <div class="test">Exam · 15,078</div>
+          </div>
+          <p class="note">The exam customers stay hidden while the model learns. A model that only does well on its practice data has <b>memorised, not learned</b>: overfitting.</p>
+          <h3 style="margin-top:20px">The model</h3>
+          <p class="note">A <b>Random Forest with 200 trees</b>. Each tree asks yes-or-no questions such as "did this customer spend more than R$ 150?", then all 200 trees vote. <code>class_weight="balanced"</code> stops the majority class from drowning out the rest.</p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Train it: <code>python ml/src/train.py</code></h3>
+        <div class="prog"><div id="train-prog"></div></div>
+        <div class="run-row">
+          <button class="btn" id="train-run" type="button">Train the model</button>
+          <span class="status-text" id="train-status">Ready · 75,387 labelled customers</span>
+        </div>
+        <div class="term" id="train-term" aria-live="polite"><span class="dim">$ python ml/src/train.py</span>
+</div>
+        <p class="note">A replay of the recorded run, with its real numbers.</p>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="panel">
+          <h3>ml/src/train.py</h3>
+          <div class="code">X = df[[<span class="s">"frequency"</span>, <span class="s">"monetary"</span>,
+        <span class="s">"avg_order_value"</span>, <span class="s">"customer_lifetime_days"</span>]]
+y = df[<span class="s">"churn"</span>]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="s">0.2</span>, random_state=<span class="s">42</span>)
+
+model = RandomForestClassifier(
+    n_estimators=<span class="s">200</span>, class_weight=<span class="s">"balanced"</span>,
+    random_state=<span class="s">42</span>)</div>
+        </div>
+        <div class="panel">
+          <h3>MLflow: the lab notebook</h3>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><td class="muted">Experiment</td><td>customer_churn_prediction</td></tr>
+                <tr><td class="muted">Run</td><td>random_forest_v1</td></tr>
+                <tr><td class="muted">param · model</td><td>RandomForest</td></tr>
+                <tr><td class="muted">param · features</td><td style="white-space:normal">frequency, monetary, avg_order_value, customer_lifetime_days</td></tr>
+                <tr><td class="muted">metric · roc_auc</td><td><b>0.667</b></td></tr>
+                <tr><td class="muted">metric · accuracy</td><td>0.625</td></tr>
+                <tr><td class="muted">artifact</td><td>model (sklearn)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Every run is saved: which model, which features, what score. "Which version is in production?" always has an answer.</p>
+        </div>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>Why must the exam questions stay hidden during practice? <b>Otherwise it is cheating; it would just memorise.</b></p>
+      </details>
+    </section>
+
+    <!-- ===================== 5. EVALUATE ===================== -->
+    <section class="stage" data-stage="evaluate" data-title="Evaluate" data-step="6" hidden>
+      <p class="eyebrow">Step 6 of 8 · Evaluate performance</p>
+      <h2 tabindex="-1">Was this measured on data the model had never seen?</h2>
+      <p class="lead">Same model, two report cards. Switch between them and watch the score move. Only one of them is honest.</p>
+
+      <div class="seg" role="group" aria-label="Which customers to grade on">
+        <button type="button" aria-pressed="true" data-eval="test">The exam · 15,078 unseen</button>
+        <button type="button" aria-pressed="false" data-eval="all">Everyone · 75,387 incl. practice</button>
+      </div>
+
+      <div class="grid g3 section" style="margin-top:20px">
+        <div class="panel">
+          <h3>ROC-AUC</h3>
+          <div class="kpi"><div class="value" id="ev-auc">0.667</div></div>
+          <svg id="ev-roc" viewBox="-8 -4 112 112" style="width:100%;max-width:280px;margin-top:10px" role="img" aria-label="ROC curve">
+            <rect x="0" y="0" width="100" height="100" fill="none" stroke="#D8D1BF" stroke-width="0.6"/>
+            <line x1="0" y1="100" x2="100" y2="0" stroke="#566C6B" stroke-width="0.6" stroke-dasharray="2 2"/>
+            <polyline id="ev-roc-line" fill="none" stroke="#0C6B70" stroke-width="1.6" points=""/>
+            <text x="50" y="108" font-size="5" text-anchor="middle" fill="#566C6B">false alarms →</text>
+            <text x="-4" y="50" font-size="5" text-anchor="middle" fill="#566C6B" transform="rotate(-90 -4 50)">churners caught →</text>
+            <text x="62" y="70" font-size="4.6" fill="#566C6B">coin toss (0.5)</text>
+          </svg>
+          <p class="note" id="ev-auc-note"></p>
+        </div>
+
+        <div class="panel">
+          <h3>Confusion matrix</h3>
+          <div class="cm">
+            <div></div><div class="h">Predicted churn</div><div class="h">Predicted stay</div>
+            <div class="h">Actually churned</div>
+            <div class="cell good"><b id="cm-tp"></b>caught</div>
+            <div class="cell bad"><b id="cm-fn"></b>missed</div>
+            <div class="h">Actually stayed</div>
+            <div class="cell bad"><b id="cm-fp"></b>false alarm</div>
+            <div class="cell good"><b id="cm-tn"></b>recognised loyal</div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><div class="label">Accuracy</div><div class="v" id="m-acc"></div></div>
+            <div class="metric"><div class="label">Precision</div><div class="v" id="m-prec"></div></div>
+            <div class="metric"><div class="label">Recall</div><div class="v" id="m-rec"></div></div>
+            <div class="metric"><div class="label">F1</div><div class="v" id="m-f1"></div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Compared to what?</h3>
+          <p class="note">A lazy model that says <b>"everyone will churn"</b> learns nothing at all.</p>
+          <div class="bars" id="baseline-bars"></div>
+          <p class="note" id="baseline-note"></p>
+          <h3 style="margin-top:20px">What the model relied on</h3>
+          <div class="bars" id="imp-bars"></div>
+          <p class="note">Transparency: we can explain <b>why</b>, not just what.</p>
+        </div>
+      </div>
+
+      <div class="callout warn" id="ev-warning" hidden><b>This is memory, not learning.</b> <code>ml/src/evaluate.py</code> grades the model on all 75,387 customers, including the 60,309 it practised on. It is the student who saw the exam paper the night before. Always ask: was this measured on unseen data?</div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>Would you use a model with an honest score of 0.67? <b>It depends on the cost of being wrong.</b> For a cheap "we miss you" email, yes: it beats guessing. For a serious decision about a person, no.</p>
+      </details>
+    </section>
+
+    <!-- ===================== 6. PREDICT ===================== -->
+    <section class="stage" data-stage="predict" data-title="Predict" data-step="7" hidden>
+      <p class="eyebrow">Step 7 of 8 · Deploy and predict</p>
+      <h2 tabindex="-1">A model on a laptop helps nobody</h2>
+      <p class="lead">Deployed as a web app for a shop owner, and as an API for other software. Three questions in, three things out: a <b>verdict</b> (classification), a <b>probability</b>, and <b>what to do now</b> (prescriptive).</p>
+
+      <div class="predict-layout">
+        <div class="panel predictor">
+          <div class="q-progress" id="q-progress" hidden>
+            <div class="q-progress-text"><span id="q-label"></span><span id="q-count"></span></div>
+            <div class="q-progress-bg"><div class="q-progress-bar" id="q-bar"></div></div>
+          </div>
+
+          <div class="q-step" data-q="0">
+            <h3 tabindex="-1">Will this customer leave?</h3>
+            <p class="lead" style="font-size:15px">Answer three quick questions about one customer. Then change the answers to see what would make them stay.</p>
+            <div class="q-actions start"><button class="btn" onclick="qGo(1)">Start</button></div>
+            <div class="examples">
+              <div class="examples-label">Or see an example customer</div>
+              <div class="chips">
+                <button class="chip" onclick="useExample(10, 1, 80)">New customer</button>
+                <button class="chip" onclick="useExample(35, 3, 390)">Loyal customer</button>
+                <button class="chip" onclick="useExample(15, 6, 1250)">VIP customer</button>
+                <button class="chip" onclick="useExample(450, 1, 45)">Inactive customer</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="q-step" data-q="1" hidden>
+            <h3 tabindex="-1">When did they last buy from you?</h3>
+            <div class="answer" id="v-rec">30 days ago</div>
+            <input type="range" class="slider-input" id="s-rec" min="1" max="600" value="30" aria-label="Days since their last order" oninput="setField('rec', this.value)">
+            <div class="scale"><span>Yesterday</span><span>Over a year ago</span></div>
+            <div class="q-actions"><button class="btn ghost" onclick="qGo(0)">Back</button><button class="btn" onclick="qGo(2)">Next</button></div>
+          </div>
+
+          <div class="q-step" data-q="2" hidden>
+            <h3 tabindex="-1">How many times have they bought?</h3>
+            <div class="answer" id="v-freq">2 times</div>
+            <input type="range" class="slider-input" id="s-freq" min="1" max="25" value="2" aria-label="Number of orders" oninput="setField('freq', this.value)">
+            <div class="scale"><span>Once</span><span>25 times</span></div>
+            <div class="q-actions"><button class="btn ghost" onclick="qGo(1)">Back</button><button class="btn" onclick="qGo(3)">Next</button></div>
+          </div>
+
+          <div class="q-step" data-q="3" hidden>
+            <h3 tabindex="-1">How much have they spent in total?</h3>
+            <div class="answer" id="v-mon">R$ 200.00</div>
+            <input type="range" class="slider-input" id="s-mon" min="10" max="3000" step="5" value="200" aria-label="Total spent in Brazilian reais" oninput="setField('mon', this.value)">
+            <div class="scale"><span>R$ 10</span><span>R$ 3,000</span></div>
+            <p class="hint-line">That is about <b id="v-aov">R$ 100.00</b> per order.</p>
+            <div class="q-actions"><button class="btn ghost" onclick="qGo(2)">Back</button><button class="btn" onclick="qGo(4)">See the result</button></div>
+          </div>
+
+          <div class="q-step" data-q="4" hidden>
+            <div aria-live="polite">
+              <h3 id="v-verdict" class="verdict" tabindex="-1">Checking...</h3>
+              <p id="v-stage" class="stage-line"></p>
+              <div class="risk-row"><span>Chance they stop buying</span><span id="v-prob" class="risk-val"></span></div>
+              <div class="gauge-bg"><div id="g-bar" class="gauge-bar"></div></div>
+              <div class="act"><span class="act-label">What to do now</span><span id="v-act"></span></div>
+            </div>
+            <div class="tweak">
+              <h4>Change the answers and see what happens</h4>
+              <div class="edit-row">
+                <label for="e-rec">Last bought</label><span id="e-v-rec" class="edit-val"></span>
+                <input type="range" class="slider-input" id="e-rec" min="1" max="600" oninput="setField('rec', this.value); changed()">
+              </div>
+              <div class="edit-row">
+                <label for="e-freq">Times bought</label><span id="e-v-freq" class="edit-val"></span>
+                <input type="range" class="slider-input" id="e-freq" min="1" max="25" oninput="setField('freq', this.value); changed()">
+              </div>
+              <div class="edit-row">
+                <label for="e-mon">Total spent</label><span id="e-v-mon" class="edit-val"></span>
+                <input type="range" class="slider-input" id="e-mon" min="10" max="3000" step="5" oninput="setField('mon', this.value); changed()">
+              </div>
+              <div class="whatif-label">Or try a what if</div>
+              <div class="chips">
+                <button class="chip" onclick="whatIf('order')">They order again today</button>
+                <button class="chip" onclick="whatIf('wait')">Two months pass with no order</button>
+                <button class="chip" onclick="whatIf('spend')">They spend R$ 200 more</button>
+              </div>
+            </div>
+            <div class="q-actions"><button class="btn ghost" onclick="qGo(3)">Back</button><button class="btn" onclick="restart()">Check another customer</button></div>
+          </div>
+        </div>
+
+        <div class="grid" style="align-content:start">
+          <div class="panel">
+            <h3>What other software sees</h3>
+            <p class="note">Send four numbers, get back a prediction. The same model can sit behind a website, a mobile app or a CRM.</p>
+            <div class="code"><span class="k">POST</span> /predict
+{
+  <span class="s">"frequency"</span>: <span id="api-f">2</span>,
+  <span class="s">"monetary"</span>: <span id="api-m">200</span>,
+  <span class="s">"recency"</span>: <span id="api-r">30</span>,
+  <span class="s">"avg_order_value"</span>: <span id="api-a">100</span>
+}</div>
+            <div class="code" id="api-out" style="margin-top:8px"><span class="c">// response appears after a prediction</span></div>
+            <div class="chips" style="margin-top:14px">
+              <a class="chip" href="/docs" target="_blank" rel="noopener" style="text-decoration:none">Open /docs</a>
+              <a class="chip" href="/health" target="_blank" rel="noopener" style="text-decoration:none">/health</a>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Responsible AI</h3>
+            <p class="note"><b>Privacy:</b> customers are random codes, no names. Nothing you type here is stored. <b>Security:</b> only the model file ships, never the data. <b>Fairness:</b> check the model does not treat any group unfairly. <b>Transparency:</b> feature importance explains why.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 2. Number of orders -->
-    <section class="step card" data-step="2" hidden>
-      <h2 tabindex="-1">How many times have they bought?</h2>
-      <div class="answer" id="v-freq">2 times</div>
-      <input type="range" class="slider-input" id="s-freq" min="1" max="25" value="2" aria-label="Number of orders" oninput="setField('freq', this.value)">
-      <div class="scale"><span>Once</span><span>25 times</span></div>
-      <div class="actions">
-        <button class="btn ghost" onclick="go(1)">Back</button>
-        <button class="btn" onclick="go(3)">Next</button>
+    <!-- ===================== 7. DASHBOARD ===================== -->
+    <section class="stage" data-stage="dashboard" data-title="Dashboard" data-step="8" hidden>
+      <p class="eyebrow">Step 8 of 8 · Explore the dashboard</p>
+      <h2 tabindex="-1">The manager's view</h2>
+      <p class="lead">Most decision-makers never open a database. They open a dashboard. The figures below come from the Power BI report built on the dbt marts.</p>
+
+      <div class="grid g4 section">
+        <div class="panel kpi"><div class="label">Total revenue</div><div class="value"><small>R$</small> 13.59M</div><div class="foot">R$ 13,591,643.70</div></div>
+        <div class="panel kpi"><div class="label">Total orders</div><div class="value">99,441</div><div class="foot">Sep 2016 to Oct 2018</div></div>
+        <div class="panel kpi warn"><div class="label">Total customers <span class="flag">Check</span></div><div class="value">99K</div><div class="foot">Counts customer IDs. Real people: <b>96,096</b></div></div>
+        <div class="panel kpi"><div class="label">Average order value</div><div class="value"><small>R$</small> 137.75</div><div class="foot">revenue ÷ orders with items</div></div>
+      </div>
+      <div class="callout warn">The duplicate from step 2 travelled all the way into the final dashboard. This card counts <b>customer IDs, not people</b>. That is why data engineering is not optional.</div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Revenue by date</h3>
+        <figure>
+          <img src="/static/revenue-by-date.png" alt="Daily revenue from late 2016 to late 2018, rising steadily, with one tall spike of about R$ 153K in late November 2017 and a fall to zero at the far right." loading="lazy" width="1297" height="696">
+          <figcaption>Power BI · mart_daily_sales</figcaption>
+        </figure>
+        <div class="grid g2" style="margin-top:12px">
+          <div class="callout"><b>The spike: 24 November 2017.</b> Black Friday. About R$ 153K in a single day, roughly three times a normal day. The data tells a story we can check against the real world.</div>
+          <div class="callout warn"><b>The drop to zero at the far right.</b> The company did not collapse; the dataset simply ends. The last weeks are incomplete. A dashboard can mislead if you do not know where its data comes from.</div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Revenue by product category · top 14 and (Blank)</h3>
+        <div class="bars" id="cat-bars"></div>
+        <p class="note">Values in R$ millions, rounded, from the Power BI products page. <b>(Blank)</b> is the 610 products with no category from step 2, now visible to a manager.</p>
+      </div>
+
+      <details class="ask">
+        <summary>Ask the room</summary>
+        <p>On one single day revenue jumped to three times normal. What happened? <b>Black Friday 2017.</b> And at the end revenue falls to zero. Did the company collapse? <b>No, the dataset ends.</b></p>
+      </details>
+    </section>
+
+    <!-- ===================== IMPACT ===================== -->
+    <section class="stage" data-stage="impact" data-title="Impact" hidden>
+      <p class="eyebrow">The bigger picture</p>
+      <h2 tabindex="-1">From data to intelligence. From intelligence to impact.</h2>
+      <p class="lead">Every step depends on the one before it. A brilliant model on dirty data creates no impact. A perfect prediction that nobody acts on creates no impact.</p>
+
+      <div class="flow section">
+        <div class="node"><b>Data</b><span>Customer interactions · 9 raw files · 99,441 orders</span></div>
+        <div class="join">→</div>
+        <div class="node"><b>Intelligence</b><span>Ingestion · Airflow + dbt + 18 tests · Random Forest · honest AUC 0.67</span></div>
+        <div class="join">→</div>
+        <div class="node green"><b>Impact</b><span>Who is at risk · what to do now · a manager's dashboard</span></div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <h3>Replace one word: "customer" becomes "student"</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>In this platform</th><th>In your institution</th></tr></thead>
+            <tbody>
+              <tr><td>Recency: days since last purchase</td><td>Days since last class attended or LMS login</td></tr>
+              <tr><td>Frequency: number of orders</td><td>Submissions, logins, library visits</td></tr>
+              <tr><td>Monetary: total spent</td><td>Assessment trend, time spent learning</td></tr>
+              <tr><td>Churn: no order in 120 days</td><td>Dropout risk</td></tr>
+              <tr><td>Retention offer</td><td>Early mentoring</td></tr>
+              <tr><td>Nine scattered files</td><td>Admissions, attendance, LMS, fee portal, exam cell</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><b>With student data, privacy and fairness matter even more.</b> A prediction should open a conversation with a student. It should never close a door on them.</div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <p style="font-size:clamp(1.3rem,3vw,1.8rem);font-weight:800;letter-spacing:-0.03em;line-height:1.25">Every one of your students is leaving a story in your data, right now. The question is whether we read it in time.</p>
+      </div>
+
+      <div class="chips" style="margin-top:20px">
+        <a class="chip" style="text-decoration:none" href="https://github.com/askmadhavan/Customer-Analytics-Platform" target="_blank" rel="noopener">Source code on GitHub</a>
+        <a class="chip" style="text-decoration:none" href="#story">Back to the start</a>
       </div>
     </section>
 
-    <!-- 3. Total spent -->
-    <section class="step card" data-step="3" hidden>
-      <h2 tabindex="-1">How much have they spent in total?</h2>
-      <div class="answer" id="v-mon">R$ 200.00</div>
-      <input type="range" class="slider-input" id="s-mon" min="10" max="3000" step="5" value="200" aria-label="Total spent in Brazilian reais" oninput="setField('mon', this.value)">
-      <div class="scale"><span>R$ 10</span><span>R$ 3,000</span></div>
-      <p class="hint">That is about <b id="v-aov">R$ 100.00</b> per order.</p>
-      <div class="actions">
-        <button class="btn ghost" onclick="go(2)">Back</button>
-        <button class="btn" onclick="go(4)">See the result</button>
-      </div>
-    </section>
-
-    <!-- 4. Result: edit the answers and watch it change -->
-    <section class="step card" data-step="4" hidden>
-      <div aria-live="polite">
-        <h2 id="v-verdict" class="verdict" tabindex="-1">Checking...</h2>
-        <p id="v-stage" class="stage-line"></p>
-        <div class="risk-row">
-          <span>Chance they stop buying</span>
-          <span id="v-prob" class="risk-val"></span>
-        </div>
-        <div class="gauge-bg"><div id="g-bar" class="gauge-bar"></div></div>
-        <div class="act">
-          <span class="act-label">What to do now</span>
-          <span id="v-act"></span>
-        </div>
-      </div>
-
-      <div class="tweak">
-        <h3>Change the answers and see what happens</h3>
-
-        <div class="edit-row">
-          <label for="e-rec">Last bought</label>
-          <span id="e-v-rec" class="edit-val"></span>
-          <input type="range" class="slider-input" id="e-rec" min="1" max="600" oninput="setField('rec', this.value); changed()">
-        </div>
-        <div class="edit-row">
-          <label for="e-freq">Times bought</label>
-          <span id="e-v-freq" class="edit-val"></span>
-          <input type="range" class="slider-input" id="e-freq" min="1" max="25" oninput="setField('freq', this.value); changed()">
-        </div>
-        <div class="edit-row">
-          <label for="e-mon">Total spent</label>
-          <span id="e-v-mon" class="edit-val"></span>
-          <input type="range" class="slider-input" id="e-mon" min="10" max="3000" step="5" oninput="setField('mon', this.value); changed()">
-        </div>
-
-        <div class="whatif-label">Or try a what if</div>
-        <div class="chips">
-          <button class="chip" onclick="whatIf('order')">They order again today</button>
-          <button class="chip" onclick="whatIf('wait')">Two months pass with no order</button>
-          <button class="chip" onclick="whatIf('spend')">They spend R$ 200 more</button>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn ghost" onclick="go(3)">Back</button>
-        <button class="btn" onclick="restart()">Check another customer</button>
-      </div>
-    </section>
-
+    <nav class="pager" aria-label="Stage navigation">
+      <button class="btn ghost" id="prev-btn" type="button">Back</button>
+      <span class="hint">Use ← and → to move between steps</span>
+      <button class="btn" id="next-btn" type="button">Next</button>
+    </nav>
   </main>
 
   <footer>
     <div class="footer-wrap">
       <a class="built-by" href="https://www.linkedin.com/in/askmadhavan/" target="_blank" rel="noopener">Built by Madhavan</a>
-      <span>Customer Analytics Platform &middot; FastAPI</span>
+      <span>Customer Analytics Platform · PostgreSQL · Airflow · dbt · scikit-learn · MLflow · FastAPI · Power BI</span>
     </div>
   </footer>
 
   <script>
-    // Half moons: 5 cells across, one split circle per cell, each turned by a random quarter turn.
-    // Quiet strength on off-white, grain inside the moons only.
+    // ---------- Half moons background ----------
     function rng(seed) {
       let s = seed >>> 0;
       return () => {
@@ -487,7 +1294,6 @@
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
       };
     }
-
     function grainTile() {
       const S = 512, c = document.createElement('canvas');
       c.width = c.height = S;
@@ -502,7 +1308,6 @@
       x.putImageData(im, 0, 0);
       return c.toDataURL('image/png');
     }
-
     function drawMoons() {
       const [a, b] = ['#EDE8DC', '#F0ECE1'];
       const R = rng(3 * 991 + 7), n = 5, W = 500, s = W / n;
@@ -526,15 +1331,315 @@
     }
     drawMoons();
 
-    const brl = n => 'R$ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+    const fmt = n => n.toLocaleString('en-US');
+    const pct = (n, d = 1) => (n * 100).toFixed(d) + '%';
 
-    // One set of answers, shared by the question screens and the result screen.
+    // ---------- Bars helper ----------
+    function bars(el, rows, max, fmtVal) {
+      document.getElementById(el).innerHTML = rows.map(r =>
+        '<div class="bar-row' + (r.cls ? ' ' + r.cls : '') + '">' +
+        '<span class="lab" title="' + r.label + '">' + r.label + '</span>' +
+        '<span class="track"><span class="fill" style="display:block;width:' + Math.max(0.5, r.value / max * 100) + '%"></span></span>' +
+        '<span class="val">' + fmtVal(r.value) + '</span></div>'
+      ).join('');
+    }
+
+    // Frequency distribution of 75,387 customers in mart_customer_rfm.
+    const FREQ = [
+      { label: 'Once', value: 73157 },
+      { label: 'Twice', value: 2044 },
+      { label: '3 times', value: 153 },
+      { label: '4 or more', value: 33 }
+    ];
+    bars('freq-bars', FREQ, 75387, v => fmt(v));
+
+    // Revenue by category (R$ millions, rounded, from the Power BI products page).
+    const CATS = [
+      ['health_beauty', 1.26], ['watches_gifts', 1.21], ['bed_bath_table', 1.04], ['sports_leisure', 0.99],
+      ['computers_accessories', 0.91], ['furniture_decor', 0.73], ['cool_stuff', 0.64], ['housewares', 0.63],
+      ['auto', 0.59], ['garden_tools', 0.49], ['toys', 0.48], ['baby', 0.41], ['perfumery', 0.40], ['telephony', 0.32],
+      ['(Blank)', 0.18, 'blank']
+    ].map(([label, value, cls]) => ({ label, value, cls }));
+    bars('cat-bars', CATS, 1.26, v => v.toFixed(2) + 'M');
+
+    // ---------- Evaluation: two report cards for the same model ----------
+    // Computed from ml/data/training/customer_churn.csv with the train.py setup
+    // (RandomForest, 200 trees, balanced, test_size=0.2, random_state=42).
+    const EVAL = {
+      test: {
+        auc: 0.667, acc: 0.625, prec: 0.751, rec: 0.633, f1: 0.687,
+        cm: { tp: 6195, fn: 3598, fp: 2055, tn: 3230 }, baseline: 0.649, n: 15078,
+        roc: [[0,0],[.017,.048],[.03,.071],[.045,.12],[.057,.153],[.092,.226],[.142,.308],[.183,.381],[.234,.451],[.301,.529],[.363,.602],[.471,.701],[.539,.767],[.594,.81],[.667,.858],[.756,.91],[.842,.952],[.878,.968],[.909,.979],[.94,.988],[1,1]],
+        note: 'Clearly better than a coin toss (0.5), far from perfect (1.0). An honest number.'
+      },
+      all: {
+        auc: 0.742, acc: 0.668, prec: 0.789, rec: 0.665, f1: 0.722,
+        cm: { tp: 32451, fn: 16353, fp: 8663, tn: 17920 }, baseline: 0.647, n: 75387,
+        roc: [[0,0],[.003,.05],[.005,.069],[.007,.09],[.011,.119],[.02,.161],[.039,.221],[.076,.306],[.125,.398],[.174,.478],[.246,.573],[.32,.659],[.452,.781],[.546,.85],[.648,.911],[.768,.966],[.821,.982],[.861,.99],[.894,.994],[.945,.998],[1,1]],
+        note: 'Higher, but 60,309 of these customers were in the practice set. The model has seen them before.'
+      }
+    };
+    const IMPORTANCE = [
+      { label: 'avg_order_value', value: 0.480 },
+      { label: 'monetary', value: 0.477 },
+      { label: 'customer_lifetime_days', value: 0.039 },
+      { label: 'frequency', value: 0.004 }
+    ];
+    bars('imp-bars', IMPORTANCE, 0.5, v => pct(v));
+
+    function showEval(which) {
+      const e = EVAL[which];
+      document.querySelectorAll('[data-eval]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.eval === which)));
+      document.getElementById('ev-auc').innerText = e.auc.toFixed(3);
+      document.getElementById('ev-auc-note').innerText = e.note;
+      document.getElementById('ev-roc-line').setAttribute('points', e.roc.map(([x, y]) => (x * 100).toFixed(1) + ',' + (100 - y * 100).toFixed(1)).join(' '));
+      for (const k of ['tp', 'fn', 'fp', 'tn']) document.getElementById('cm-' + k).innerText = fmt(e.cm[k]);
+      document.getElementById('m-acc').innerText = pct(e.acc);
+      document.getElementById('m-prec').innerText = pct(e.prec);
+      document.getElementById('m-rec').innerText = pct(e.rec);
+      document.getElementById('m-f1').innerText = e.f1.toFixed(3);
+      bars('baseline-bars', [
+        { label: 'Say "everyone churns"', value: e.baseline, cls: 'blank' },
+        { label: 'Random Forest', value: e.acc }
+      ], 1, v => pct(v));
+      document.getElementById('baseline-note').innerHTML = which === 'test'
+        ? 'On the exam the lazy guess scores <b>' + pct(e.baseline) + '</b> accuracy, the model <b>' + pct(e.acc) + '</b>. Accuracy alone flatters the lazy guess; the model\'s value is in ranking risk (AUC) and catching ' + pct(e.rec, 0) + ' of churners.'
+        : 'When someone says "our model is ' + pct(e.acc, 0) + ' accurate", ask: compared to what?';
+      document.getElementById('ev-warning').hidden = which !== 'all';
+    }
+    document.querySelectorAll('[data-eval]').forEach(b => b.addEventListener('click', () => showEval(b.dataset.eval)));
+    showEval('test');
+
+    // ---------- Replays: ingestion, Airflow DAG, training ----------
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const wait = ms => new Promise(r => setTimeout(r, reduceMotion ? 0 : ms));
+    function log(termId, html) {
+      const t = document.getElementById(termId);
+      t.insertAdjacentHTML('beforeend', html + '\n');
+      t.scrollTop = t.scrollHeight;
+    }
+    const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+    const RAW_FILES = [
+      ['olist_customers_dataset', 99441], ['olist_geolocation_dataset', 1000163], ['olist_order_items_dataset', 112650],
+      ['olist_order_payments_dataset', 103886], ['olist_order_reviews_dataset', 99224], ['olist_orders_dataset', 99441],
+      ['olist_products_dataset', 32951], ['olist_sellers_dataset', 3095], ['product_category_name_translation', 71]
+    ];
+    document.getElementById('files').innerHTML = RAW_FILES.map(([n], i) =>
+      '<div class="file" id="file-' + i + '"><span class="fn" title="' + n + '.csv">' + n + '.csv</span><div class="fs">waiting</div></div>').join('');
+
+    let ingRunning = false, ingDone = false;
+    async function runIngestion() {
+      if (ingRunning) return;
+      ingRunning = true;
+      const btn = document.getElementById('ing-run'), status = document.getElementById('ing-status');
+      btn.disabled = true;
+      document.getElementById('ing-term').innerHTML = '<span class="dim">$ python src/ingestion.py</span>\n';
+      let total = 0;
+      for (let i = 0; i < RAW_FILES.length; i++) {
+        const [name, rows] = RAW_FILES[i], card = document.getElementById('file-' + i);
+        card.className = 'file loading'; card.querySelector('.fs').innerText = 'loading…';
+        log('ing-term', 'Loading ' + name);
+        await wait(name.includes('geolocation') ? 1100 : 380);
+        total += rows;
+        card.className = 'file loaded'; card.querySelector('.fs').innerText = 'table · ' + fmt(rows) + ' rows';
+        log('ing-term', '<span class="ok">' + name + ' loaded: ' + rows + ' rows</span>');
+        document.getElementById('ing-prog').style.width = ((i + 1) / RAW_FILES.length * 100) + '%';
+        status.innerText = (i + 1) + ' of 9 tables · ' + fmt(total) + ' rows loaded';
+      }
+      log('ing-term', '<span class="dim">9 raw tables in schema public · ' + fmt(total) + ' rows · nothing cleaned yet</span>');
+      status.innerHTML = '<b>Done.</b> 9 raw tables · ' + fmt(total) + ' rows. Next: look at what is wrong with them.';
+      btn.innerText = 'Run again';
+      btn.disabled = false;
+      ingRunning = false; ingDone = true;
+    }
+    document.getElementById('ing-run').addEventListener('click', runIngestion);
+
+    const DBT_TESTS = [
+      'unique_stg_orders_order_id', 'not_null_stg_orders_order_id', 'not_null_stg_orders_customer_id',
+      'unique_stg_customers_customer_id', 'not_null_stg_customers_customer_id',
+      'unique_stg_products_product_id', 'not_null_stg_products_product_id',
+      'not_null_stg_order_items_order_id', 'not_null_stg_order_items_product_id',
+      'unique_stg_reviews_review_id', 'not_null_stg_reviews_review_id', 'not_null_stg_reviews_order_id',
+      'unique_fact_orders_order_id', 'not_null_fact_orders_order_id',
+      'not_null_mart_product_performance_product_id', 'not_null_mart_product_performance_total_revenue',
+      'not_null_mart_daily_sales_orders', 'not_null_mart_daily_sales_revenue'
+    ];
+    function renderTests(passed) {
+      document.getElementById('tests').innerHTML = DBT_TESTS.map((t, i) =>
+        '<div class="t"><span title="' + t + '">' + t + '</span><span class="' + (i < passed ? 'pass">PASS' : 'pend">—') + '</span></div>').join('');
+      const sum = document.getElementById('tests-summary');
+      sum.innerText = passed === 0 ? 'not run yet' : passed + ' of ' + DBT_TESTS.length + ' passed';
+      sum.parentElement.parentElement.dataset.state = passed === DBT_TESTS.length ? 'success' : (passed ? 'running' : 'queued');
+    }
+    renderTests(0);
+
+    function setTask(task, state) {
+      const n = document.querySelector('#dag [data-task="' + task + '"]');
+      n.dataset.state = state;
+      n.querySelector('.st-badge').innerText = state;
+    }
+    const DBT_MODELS = ['stg_customers', 'stg_order_items', 'stg_orders', 'stg_products', 'stg_reviews',
+      'fact_orders', 'mart_customer_rfm', 'mart_customer_segments', 'mart_daily_sales', 'mart_product_performance', 'mart_sales_summary'];
+    let dagRunning = false;
+    async function runDag() {
+      if (dagRunning) return;
+      dagRunning = true;
+      const btn = document.getElementById('dag-run'), status = document.getElementById('dag-status');
+      btn.disabled = true;
+      ['ingest', 'run', 'test'].forEach(t => setTask(t, 'queued'));
+      renderTests(0);
+      document.getElementById('dag-term').innerHTML = '';
+      status.innerText = 'Manual run triggered';
+
+      setTask('ingest', 'running');
+      log('dag-term', '<span class="dim">[data_ingestion] python /opt/airflow/src/ingestion.py</span>');
+      for (const [n, r] of RAW_FILES) { await wait(110); log('dag-term', n + ' loaded: ' + r + ' rows'); }
+      setTask('ingest', 'success');
+      log('dag-term', '<span class="ok">[data_ingestion] Task exited with return code 0</span>');
+
+      setTask('run', 'running');
+      log('dag-term', '<span class="dim">[dbt_transform] cd /opt/customer_analytics_dbt &amp;&amp; dbt run</span>');
+      for (let i = 0; i < DBT_MODELS.length; i++) {
+        await wait(220);
+        const kind = DBT_MODELS[i].startsWith('stg_') ? 'view' : 'table';
+        log('dag-term', (i + 1) + ' of ' + DBT_MODELS.length + ' OK created sql ' + kind + ' model ' + (kind === 'view' ? 'public_staging.' : 'public_analytics.') + DBT_MODELS[i]);
+      }
+      log('dag-term', '<span class="ok">Completed successfully · PASS=' + DBT_MODELS.length + ' WARN=0 ERROR=0</span>');
+      setTask('run', 'success');
+
+      setTask('test', 'running');
+      log('dag-term', '<span class="dim">[dbt_test] dbt test</span>');
+      for (let i = 0; i < DBT_TESTS.length; i++) {
+        await wait(120);
+        log('dag-term', (i + 1) + ' of ' + DBT_TESTS.length + ' PASS ' + DBT_TESTS[i]);
+        renderTests(i + 1);
+      }
+      log('dag-term', '<span class="ok">Completed successfully · PASS=' + DBT_TESTS.length + ' WARN=0 ERROR=0</span>');
+      setTask('test', 'success');
+      status.innerHTML = '<b>All 3 tasks green.</b> Raw tables untouched, clean tables built beside them.';
+      btn.innerText = 'Trigger again';
+      btn.disabled = false;
+      dagRunning = false;
+    }
+    document.getElementById('dag-run').addEventListener('click', runDag);
+
+    document.querySelectorAll('[data-ba]').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-ba]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      document.querySelectorAll('[data-ba-view]').forEach(v => { v.hidden = v.dataset.baView !== b.dataset.ba; });
+    }));
+
+    document.querySelectorAll('#rule-tabs [data-rule]').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('#rule-tabs [data-rule]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+      document.querySelectorAll('.rule').forEach(r => { r.hidden = r.dataset.rule !== b.dataset.rule; });
+    }));
+
+    let trainRunning = false;
+    async function runTraining() {
+      if (trainRunning) return;
+      trainRunning = true;
+      const btn = document.getElementById('train-run'), status = document.getElementById('train-status'), prog = document.getElementById('train-prog');
+      btn.disabled = true;
+      prog.style.width = '0%';
+      document.getElementById('train-term').innerHTML = '<span class="dim">$ python ml/src/train.py</span>\n';
+      log('train-term', 'Loaded ml/data/training/customer_churn.csv · 75,387 rows');
+      await wait(400);
+      log('train-term', 'Features: frequency, monetary, avg_order_value, customer_lifetime_days');
+      log('train-term', '<span class="warnl">Excluded: recency (the churn label is built from it)</span>');
+      await wait(400);
+      log('train-term', 'train_test_split(test_size=0.2) → practice 60,309 · exam 15,078');
+      log('train-term', '<span class="dim">mlflow: experiment "customer_churn_prediction" · run "random_forest_v1"</span>');
+      status.innerText = 'Growing trees…';
+      for (let t = 25; t <= 200; t += 25) {
+        await wait(260);
+        prog.style.width = (t / 200 * 100) + '%';
+        log('train-term', 'RandomForestClassifier: ' + t + ' / 200 trees');
+      }
+      await wait(300);
+      log('train-term', 'Graded on the 15,078 unseen customers:');
+      log('train-term', '<span class="ok">  roc_auc  = 0.667</span>');
+      log('train-term', '<span class="ok">  accuracy = 0.625</span>');
+      log('train-term', '<span class="dim">mlflow: logged params, metrics and model artifact</span>');
+      log('train-term', '<span class="ok">Model saved → ml/models/churn_model.pkl</span>');
+      status.innerHTML = '<b>Trained.</b> Honest ROC-AUC 0.667 on unseen customers. Next: how good is that?';
+      btn.innerText = 'Train again';
+      btn.disabled = false;
+      trainRunning = false;
+    }
+    document.getElementById('train-run').addEventListener('click', runTraining);
+
+    // ---------- Stage navigation ----------
+    const STAGES_EL = [...document.querySelectorAll('.stage')];
+    const ORDER = STAGES_EL.map(s => s.dataset.stage);
+    const nav = document.getElementById('stage-nav');
+    nav.innerHTML = STAGES_EL.map(s =>
+      '<li><a href="#' + s.dataset.stage + '" data-to="' + s.dataset.stage + '">' +
+      (s.dataset.step ? '<span class="n">' + s.dataset.step + '</span>' : '') + s.dataset.title + '</a></li>'
+    ).join('');
+
+    // Journey cards on the story page link to each demo step.
+    const JOURNEY_TEXT = {
+      ingest: 'CSV files into PostgreSQL', data: 'Duplicates and gaps', clean: 'Airflow, dbt and tests', patterns: 'RFM and the 97%',
+      train: 'Random Forest, 80/20 split', evaluate: 'Honest AUC 0.67', predict: 'Web app and API', dashboard: 'Power BI view'
+    };
+    document.getElementById('journey').innerHTML = STAGES_EL.filter(s => s.dataset.step).map((s, i, arr) =>
+      '<a class="node" href="#' + s.dataset.stage + '"><b>' + s.dataset.step + ' · ' + s.dataset.title + '</b><span>' + JOURNEY_TEXT[s.dataset.stage] + '</span></a>' +
+      (i < arr.length - 1 ? '<div class="join">→</div>' : '')
+    ).join('');
+
+    let current = null;
+    function show(id, focus) {
+      if (!ORDER.includes(id)) id = 'story';
+      if (id === current) return;
+      current = id;
+      const idx = ORDER.indexOf(id);
+      STAGES_EL.forEach(s => { s.hidden = s.dataset.stage !== id; });
+      nav.querySelectorAll('a').forEach((a, i) => {
+        if (i === idx) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+        a.classList.toggle('done', i < idx);
+      });
+      const active = nav.querySelector('[aria-current]');
+      if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
+      const prev = document.getElementById('prev-btn'), next = document.getElementById('next-btn');
+      prev.style.visibility = idx === 0 ? 'hidden' : 'visible';
+      next.style.visibility = idx === ORDER.length - 1 ? 'hidden' : 'visible';
+      if (idx < ORDER.length - 1) {
+        const n = STAGES_EL[idx + 1];
+        next.innerText = 'Next: ' + (n.dataset.step ? n.dataset.step + ' · ' : '') + n.dataset.title;
+      }
+      window.scrollTo(0, 0);
+      if (focus) {
+        const h = STAGES_EL[idx].querySelector('[tabindex="-1"]');
+        if (h) h.focus({ preventScroll: true });
+      }
+      document.title = (idx === 0 ? '' : STAGES_EL[idx].dataset.title + ' · ') + 'Customer Analytics';
+    }
+    function step(delta) {
+      const idx = ORDER.indexOf(current) + delta;
+      if (idx >= 0 && idx < ORDER.length) location.hash = ORDER[idx];
+    }
+    document.getElementById('prev-btn').addEventListener('click', () => step(-1));
+    document.getElementById('next-btn').addEventListener('click', () => step(1));
+    window.addEventListener('hashchange', () => show(location.hash.slice(1), true));
+    document.addEventListener('keydown', e => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.key === 'ArrowRight') step(1);
+      else if (e.key === 'ArrowLeft') step(-1);
+    });
+    show(location.hash.slice(1) || 'story', false);
+
+    // ---------- Predictor: the shop-owner flow ----------
+    const brl = n => 'R$ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const state = { rec: 30, freq: 2, mon: 200 };
     const LIMITS = { rec: [1, 600], freq: [1, 25], mon: [10, 3000] };
-
     const lastBought = n => n === 1 ? 'Yesterday' : n + ' days ago';
     const timesBought = n => n === 1 ? 'Once' : n + ' times';
+
+    function requestBody(v) {
+      return { frequency: v.freq, monetary: v.mon, recency: v.rec, avg_order_value: parseFloat((v.mon / v.freq).toFixed(2)) };
+    }
 
     function render() {
       for (const k of ['rec', 'freq', 'mon']) {
@@ -545,6 +1650,11 @@
       document.getElementById('v-freq').innerText = document.getElementById('e-v-freq').innerText = timesBought(state.freq);
       document.getElementById('v-mon').innerText = document.getElementById('e-v-mon').innerText = brl(state.mon);
       document.getElementById('v-aov').innerText = brl(state.mon / state.freq);
+      const body = requestBody(state);
+      document.getElementById('api-f').innerText = body.frequency;
+      document.getElementById('api-m').innerText = body.monetary;
+      document.getElementById('api-r').innerText = body.recency;
+      document.getElementById('api-a').innerText = body.avg_order_value;
     }
 
     function setField(k, v) {
@@ -553,15 +1663,13 @@
       render();
     }
 
-    // Journey stages are simple rules, shown so owners can place the customer.
-    const STAGES = {
+    const STAGE_INFO = {
       new: { name: 'New', text: 'they have bought once.', act: 'Welcome them and offer a small discount on their second order.' },
       regular: { name: 'Regular', text: 'they have bought twice.', act: 'Send a friendly reminder to order again.' },
       loyal: { name: 'Loyal', text: 'they keep coming back to buy.', act: 'Suggest related products and give them reward points.' },
       vip: { name: 'VIP', text: 'they have spent over R$ 1,000 across 5 or more orders.', act: 'Thank them with a gift or early access to new products.' },
       risk: { name: 'At risk', text: 'they have not bought anything in over 120 days.', act: 'Send a limited-time discount of 15 to 20% to win them back.' }
     };
-
     function stageOf({ rec, freq, mon }) {
       if (rec > 120) return 'risk';
       if (mon > 1000 && freq >= 5) return 'vip';
@@ -576,7 +1684,6 @@
       verdict.style.color = 'var(--sub)';
     }
 
-    // One automatic retry covers a dropped request or a slow first start.
     async function postPredict(body) {
       for (let attempt = 0; ; attempt++) {
         try {
@@ -595,37 +1702,33 @@
       }
     }
 
-    // Each prediction gets an id so a slow, older answer never replaces a newer one.
     let latest = 0;
-
     async function predict() {
       const id = ++latest;
       const v = { ...state }, stage = stageOf(v);
       const verdict = document.getElementById('v-verdict');
       const act = document.getElementById('v-act');
       const gauge = document.getElementById('g-bar');
-      document.getElementById('v-stage').innerHTML = '<b>' + STAGES[stage].name + ' customer</b>: ' + STAGES[stage].text;
+      document.getElementById('v-stage').innerHTML = '<b>' + STAGE_INFO[stage].name + ' customer</b>: ' + STAGE_INFO[stage].text;
       showChecking();
-
       try {
-        const data = await postPredict({ frequency: v.freq, monetary: v.mon, recency: v.rec, avg_order_value: parseFloat((v.mon / v.freq).toFixed(2)) });
+        const data = await postPredict(requestBody(v));
         if (id !== latest) return;
+        document.getElementById('api-out').innerText = JSON.stringify(data, null, 2);
         const isChurn = (data.prediction === 1 || data.churn_prediction === 1);
         const prob = data.probability !== undefined ? Math.round(data.probability * 100) : (isChurn ? 100 : 0);
-
         document.getElementById('v-prob').innerText = prob + '%';
         gauge.style.width = prob + '%';
-
         if (isChurn || prob > 50) {
           verdict.innerText = 'Likely to leave';
           verdict.style.color = 'var(--accent)';
           gauge.style.background = 'var(--accent)';
-          act.innerText = stage === 'risk' ? STAGES.risk.act : 'Reach out now with a personal offer, before they stop buying.';
+          act.innerText = stage === 'risk' ? STAGE_INFO.risk.act : 'Reach out now with a personal offer, before they stop buying.';
         } else {
           verdict.innerText = 'Likely to stay';
           verdict.style.color = 'var(--fg)';
           gauge.style.background = 'var(--sub)';
-          act.innerText = stage === 'risk' ? 'Check in with a friendly message before they drift away.' : STAGES[stage].act;
+          act.innerText = stage === 'risk' ? 'Check in with a friendly message before they drift away.' : STAGE_INFO[stage].act;
         }
       } catch (e) {
         if (id !== latest) return;
@@ -635,7 +1738,6 @@
       }
     }
 
-    // While a slider is moving, wait until it settles before asking the model.
     let settle;
     function changed() {
       latest++;
@@ -659,42 +1761,33 @@
       predict();
     }
 
-    // Steps: 0 welcome, 1 to 3 questions, 4 result.
-    const LABELS = ['', 'Question 1 of 3', 'Question 2 of 3', 'Question 3 of 3', 'Your result'];
-    const LAST = 4;
-
-    function go(n) {
-      // Reaching the result means the answers are in, so ask the model now.
+    const Q_LABELS = ['', 'Question 1 of 3', 'Question 2 of 3', 'Question 3 of 3', 'Your result'];
+    const Q_LAST = 4;
+    function qGo(n) {
       if (n === 4) predict();
-      document.querySelectorAll('.step').forEach(el => { el.hidden = Number(el.dataset.step) !== n; });
-      document.getElementById('progress').hidden = n === 0;
-      document.getElementById('p-label').innerText = LABELS[n];
-      document.getElementById('p-count').innerText = 'Step ' + n + ' of ' + LAST;
-      document.getElementById('p-bar').style.width = (n / LAST * 100) + '%';
-      window.scrollTo(0, 0);
-      const heading = document.querySelector('.step[data-step="' + n + '"] [tabindex="-1"]');
+      document.querySelectorAll('.q-step').forEach(el => { el.hidden = Number(el.dataset.q) !== n; });
+      document.getElementById('q-progress').hidden = n === 0;
+      document.getElementById('q-label').innerText = Q_LABELS[n];
+      document.getElementById('q-count').innerText = 'Step ' + n + ' of ' + Q_LAST;
+      document.getElementById('q-bar').style.width = (n / Q_LAST * 100) + '%';
+      const heading = document.querySelector('.q-step[data-q="' + n + '"] [tabindex="-1"]');
       if (heading) heading.focus({ preventScroll: true });
     }
-
     function setValues(rec, freq, mon) {
       Object.assign(state, { rec, freq, mon });
       render();
     }
-
-    // An example skips the questions and goes straight to the result.
     function useExample(rec, freq, mon) {
       setValues(rec, freq, mon);
-      go(4);
+      qGo(4);
     }
-
     function restart() {
       setValues(30, 2, 200);
-      go(0);
+      qGo(0);
     }
-
     render();
 
-    // Wake the model while the visitor reads the welcome screen, so the first real answer is quick.
+    // Wake the model while the visitor reads, so the first real answer is quick.
     fetch('/predict', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
