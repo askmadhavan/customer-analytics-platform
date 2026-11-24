@@ -27,6 +27,7 @@
       color-scheme: light;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
     body { font-family: var(--font); background: var(--bg); color: var(--fg); line-height: 1.5; font-size: 14px; -webkit-font-smoothing: antialiased; }
     button, input, select { font: inherit; color: inherit; }
     a { color: var(--accent); }
@@ -57,11 +58,9 @@
     .crumbs b { color: var(--fg); font-weight: 600; }
     .toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sub); cursor: pointer; white-space: nowrap; }
     .toggle input { accent-color: var(--accent); width: 15px; height: 15px; }
-    .top-right { display: flex; align-items: center; gap: 16px; flex: none; }
     .dataset { font-size: 12px; color: var(--sub); text-decoration: none; background: var(--inset); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
     .dataset b { color: var(--fg); font-weight: 600; }
     .dataset:hover { border-color: var(--sub); }
-    @media (max-width: 600px) { .pn-label { display: none; } .top-right { gap: 10px; } }
     main { padding: 24px 28px 40px; width: 100%; max-width: 1240px; flex: 1; }
 
     @media (max-width: 900px) {
@@ -315,8 +314,30 @@
     button.rank-row[aria-pressed="true"] .lab { font-weight: 700; }
     @media (max-width: 600px) { .rank-row { grid-template-columns: minmax(48px, 96px) minmax(0, 1fr) 66px; gap: 8px; } }
     .rank-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--sub); }
-    figure img {    figure img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--line); }
+    figure img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--line); }
 
+    .file { position: relative; padding-right: 34px; }
+    .file .x { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: 0; border-radius: 4px; background: none; color: var(--sub); font-size: 16px; line-height: 1; cursor: pointer; }
+    .file .x:hover { background: var(--inset); color: var(--fg); }
+    .file .f-body { min-width: 0; }
+    .drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 150px; border: 1.5px dashed var(--line); border-radius: 8px; cursor: pointer; text-align: center; }
+    .drop[hidden] { display: none; }
+    .drop:hover, #files-card.dragging .drop { border-color: var(--accent); background: #F7FBFA; }
+    #files-card.dragging { border-color: var(--accent); }
+    label.btn { user-select: none; }
+    .map-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; }
+    @media (max-width: 900px) { .map-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 520px) { .map-grid { grid-template-columns: minmax(0, 1fr); } }
+    .map-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .map-field .meta b { color: var(--warn); }
+    .map-field select { width: 100%; min-width: 0; }
+    .status-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-size: 12px; margin: 0 6px 6px 0; cursor: pointer; }
+    .status-chip input { accent-color: var(--fg); }
+    .empty-mart { display: none; }
+    body.no-mart .empty-mart { display: block; }
+    body.no-mart .page[data-needs] > *:not(:first-child):not(.empty-mart) { display: none !important; }
+    .empty-mart .chips { margin-top: 12px; }
+    .badge.err { background: #F8E1DA; color: #A13A1F; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
 </head>
@@ -331,10 +352,6 @@
   <div class="content">
     <header class="topbar">
       <span class="crumbs" id="crumbs"></span>
-      <div class="top-right">
-        <a class="dataset" href="https://olist.com" target="_blank" rel="noopener" title="Brazilian e-commerce marketplace · public dataset">Example dataset: <b>Olist</b></a>
-        <label class="toggle"><input type="checkbox" id="pn-toggle" aria-label="Presenter notes"> <span class="pn-label">Presenter notes</span></label>
-      </div>
     </header>
 
     <main>
@@ -350,22 +367,16 @@
           <p class="q">Ask: If you saw this tomorrow morning, what would you do?</p>
         </div>
         <div class="grid g4">
-          <div class="card kpi"><div class="label">Orders</div><div class="value">99,441</div><div class="foot">Sep 2016 – Oct 2018</div></div>
-          <div class="card kpi"><div class="label">Customers (people)</div><div class="value">96,096</div><div class="foot">from 99,441 customer IDs</div></div>
-          <div class="card kpi"><div class="label">One-time buyers</div><div class="value">97.0%</div><div class="foot">73,157 of 75,387</div></div>
-          <div class="card kpi"><div class="label">Churn rate</div><div class="value">64.7%</div><div class="foot">no order in 120 days</div></div>
+          <div class="card kpi"><div class="label">Orders</div><div class="value" id="ov-0">–</div><div class="foot" id="ov-0f"></div></div>
+          <div class="card kpi"><div class="label">Customers</div><div class="value" id="ov-1">–</div><div class="foot" id="ov-1f"></div></div>
+          <div class="card kpi"><div class="label">One-time buyers</div><div class="value" id="ov-2">–</div><div class="foot" id="ov-2f"></div></div>
+          <div class="card kpi"><div class="label">Churn rate</div><div class="value" id="ov-3">–</div><div class="foot" id="ov-3f"></div></div>
         </div>
         <div class="card mt">
           <div class="card-head"><span class="card-title">Pipeline</span><span class="meta" id="pipeline-summary"></span></div>
           <div class="modules" id="modules"></div>
         </div>
-        <div class="card mt source">
-          <span class="lbl">Data source</span>
-          <b>Olist</b><span class="muted">Brazilian e-commerce marketplace · São Paulo</span>
-          <a href="https://olist.com" target="_blank" rel="noopener">olist.com ↗</a>
-          <a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" rel="noopener">Kaggle dataset ↗</a>
-          <span class="meta">CC BY-NC-SA 4.0 · amounts in BRL</span>
-        </div>
+        <div class="card mt source" id="ov-source"></div>
       </section>
 
       <!-- ========== INGESTION ========== -->
@@ -373,7 +384,10 @@
         <div class="page-head">
           <div><h1 tabindex="-1">Ingestion</h1></div>
           <div class="head-actions">
-            <button class="btn ghost" id="ing-all">Clear selection</button>
+            <button class="btn ghost" id="ing-example" hidden>Use example dataset</button>
+            <button class="btn ghost" id="ing-clear">Remove all</button>
+            <label class="btn ghost" for="ing-file" tabindex="0" id="ing-upload">Upload files</label>
+            <input type="file" id="ing-file" accept=".csv,.tsv,.txt,text/csv" multiple hidden>
             <button class="btn" id="ing-run">Load selected</button>
           </div>
         </div>
@@ -381,9 +395,10 @@
           <p><b>E and L of ELT.</b> Nine files copied exactly as they are; no cleaning yet. Ravi's record: source → ingestion → storage.</p>
           <p class="q">Ask: What are the equivalent systems in your institution?</p>
         </div>
-        <div class="card">
-          <div class="card-head"><span class="card-title">Source files · data/raw/</span><span class="meta" id="ing-status">0 of 9 loaded</span></div>
+        <div class="card" id="files-card">
+          <div class="card-head"><span class="card-title">Source files</span><span class="meta" id="ing-status"></span></div>
           <div class="files" id="files"></div>
+          <label class="drop" id="drop-empty" for="ing-file" hidden><b>Drop CSV files here</b><span class="meta">or choose files</span></label>
           <div class="prog mt"><div id="ing-prog"></div></div>
         </div>
         <div class="grid g-side mt">
@@ -409,7 +424,7 @@
           <p class="q">Ask: How many customers does this shop have? Let them guess before running.</p>
         </div>
         <div class="grid g4">
-          <div class="card kpi"><div class="label">Checks</div><div class="value">4</div></div>
+          <div class="card kpi"><div class="label">Checks</div><div class="value" id="k-total">–</div></div>
           <div class="card kpi"><div class="label">Passed</div><div class="value" id="k-pass">–</div></div>
           <div class="card kpi"><div class="label">Issues</div><div class="value" id="k-fail">–</div></div>
           <div class="card kpi"><div class="label">Rows affected</div><div class="value" id="k-rows">–</div></div>
@@ -433,14 +448,19 @@
           <p><b>Airflow decides when, dbt decides how.</b> Runs nightly at midnight. Raw tables stay untouched; clean tables are built beside them (ELT).</p>
           <p class="q">Ask: What could go wrong at each stage?</p>
         </div>
+        <div class="card" id="map-card" hidden style="margin-bottom:14px">
+          <div class="card-head"><span class="card-title">Field mapping</span><span class="badge" id="map-status"></span></div>
+          <div class="map-grid" id="map-grid"></div>
+          <div id="status-vals" class="mt" hidden></div>
+        </div>
         <div class="card">
           <div class="card-head"><span class="card-title">customer_analytics_pipeline</span><span class="meta" id="dag-status">@daily · last run: none</span></div>
           <div class="flow" id="dag">
-            <div class="node" data-task="ingest"><b>data_ingestion</b><span class="meta">python ingestion.py</span><span class="badge">queued</span></div>
+            <div class="node" data-task="ingest"><b>data_ingestion</b><span class="meta" id="dag-m1">python ingestion.py</span><span class="badge">queued</span></div>
             <div class="join">→</div>
-            <div class="node" data-task="run"><b>dbt_transform</b><span class="meta">dbt run · 11 models</span><span class="badge">queued</span></div>
+            <div class="node" data-task="run"><b>dbt_transform</b><span class="meta" id="dag-m2">dbt run · 11 models</span><span class="badge">queued</span></div>
             <div class="join">→</div>
-            <div class="node" data-task="test"><b>dbt_test</b><span class="meta">dbt test · 18 tests</span><span class="badge">queued</span></div>
+            <div class="node" data-task="test"><b>dbt_test</b><span class="meta" id="dag-m3">dbt test · 18 tests</span><span class="badge">queued</span></div>
           </div>
           <div class="term mt" id="dag-term"><span class="dim">Trigger the DAG to see task logs.</span></div>
         </div>
@@ -449,9 +469,9 @@
           <div class="card-head">
             <span class="card-title">Before and after</span>
             <div class="seg" id="ba-seg">
-              <button aria-pressed="true" data-v="raw">Raw order</button>
-              <button aria-pressed="false" data-v="stg">stg_orders</button>
-              <button aria-pressed="false" data-v="mart">mart_customer_rfm</button>
+              <button aria-pressed="true" data-v="raw" id="ba-l1">Raw order</button>
+              <button aria-pressed="false" data-v="stg" id="ba-l2">stg_orders</button>
+              <button aria-pressed="false" data-v="mart" id="ba-l3">mart_customer_rfm</button>
             </div>
           </div>
           <div class="table-wrap" id="ba-view"></div>
@@ -461,10 +481,6 @@
           <div class="card">
             <div class="card-head"><span class="card-title">Transformation rules</span>
               <select id="rule-sel" class="chip" aria-label="Rule">
-                <option value="0">Fix formats</option>
-                <option value="1">One person, one ID</option>
-                <option value="2">Keep valid orders</option>
-                <option value="3">Aggregate per person</option>
               </select>
             </div>
             <div class="code" id="rule-code"></div>
@@ -477,7 +493,7 @@
       </section>
 
       <!-- ========== CUSTOMER INSIGHTS ========== -->
-      <section class="page" data-page="insights" data-title="Customer insights" data-group="Analytics" hidden>
+      <section class="page" data-needs="mart" data-page="insights" data-title="Customer insights" data-group="Analytics" hidden>
         <div class="page-head">
           <div><h1 tabindex="-1">Customer insights</h1></div>
         </div>
@@ -509,14 +525,14 @@
           <div class="card-head"><span class="card-title">Customers <span class="meta">(sample)</span></span>
             <input id="cust-search" class="search" placeholder="Search customer ID" aria-label="Search customer ID"></div>
           <div class="table-wrap"><table>
-            <thead><tr><th>customer_unique_id</th><th class="num">Recency</th><th class="num">Frequency</th><th class="num">Monetary (R$)</th><th class="num">Avg order (R$)</th><th>Status</th></tr></thead>
+            <thead><tr><th>customer_unique_id</th><th class="num">Recency</th><th class="num">Frequency</th><th class="num">Monetary</th><th class="num">Avg order</th><th>Status</th></tr></thead>
             <tbody id="cust-body"></tbody>
           </table></div>
         </div>
       </section>
 
       <!-- ========== TRAINING ========== -->
-      <section class="page" data-page="train" data-title="Training" data-group="Model" hidden>
+      <section class="page" data-needs="mart" data-page="train" data-title="Training" data-group="Model" hidden>
         <div class="page-head">
           <div><h1 tabindex="-1">Training</h1></div>
         </div>
@@ -564,7 +580,7 @@
       </section>
 
       <!-- ========== EVALUATION ========== -->
-      <section class="page" data-page="evaluate" data-title="Evaluation" data-group="Model" hidden>
+      <section class="page" data-needs="mart" data-page="evaluate" data-title="Evaluation" data-group="Model" hidden>
         <div class="page-head">
           <div><h1 tabindex="-1">Evaluation</h1></div>
           <div class="head-actions">
@@ -619,7 +635,7 @@
       </section>
 
       <!-- ========== PREDICTION ========== -->
-      <section class="page" data-page="predict" data-title="Prediction" data-group="Serving" hidden>
+      <section class="page" data-needs="mart" data-page="predict" data-title="Prediction" data-group="Serving" hidden>
         <div class="page-head">
           <div><h1 tabindex="-1">Churn prediction</h1></div>
           <div class="head-actions"><a class="btn ghost" href="/docs" target="_blank" rel="noopener">API docs ↗</a></div>
@@ -632,10 +648,10 @@
             <div class="q-step" data-q="0">
               <h3 tabindex="-1">Score a customer</h3>
               <div class="chips mt">
-                <button class="chip" onclick="useExample(10, 1, 80)">New customer</button>
-                <button class="chip" onclick="useExample(35, 3, 390)">Loyal customer</button>
-                <button class="chip" onclick="useExample(15, 6, 1250)">VIP customer</button>
-                <button class="chip" onclick="useExample(450, 1, 45)">Inactive customer</button>
+                <button class="chip" data-ex="0">New customer</button>
+                <button class="chip" data-ex="1">Loyal customer</button>
+                <button class="chip" data-ex="2">VIP customer</button>
+                <button class="chip" data-ex="3">Inactive customer</button>
               </div>
               <div class="q-actions" style="justify-content:flex-start"><button class="btn" onclick="qGo(1)">Start</button></div>
             </div>
@@ -643,21 +659,21 @@
               <p class="meta">1 of 3</p><h3 tabindex="-1">When did they last buy?</h3>
               <div class="answer" id="v-rec"></div>
               <input type="range" id="s-rec" min="1" max="600" aria-label="Days since last order" oninput="setField('rec', this.value)">
-              <div class="scale"><span>Yesterday</span><span>600 days</span></div>
+              <div class="scale"><span>Yesterday</span><span id="sc-rec"></span></div>
               <div class="q-actions"><button class="btn ghost" onclick="qGo(0)">Back</button><button class="btn" onclick="qGo(2)">Next</button></div>
             </div>
             <div class="q-step" data-q="2" hidden>
               <p class="meta">2 of 3</p><h3 tabindex="-1">How many orders?</h3>
               <div class="answer" id="v-freq"></div>
               <input type="range" id="s-freq" min="1" max="25" aria-label="Number of orders" oninput="setField('freq', this.value)">
-              <div class="scale"><span>1</span><span>25</span></div>
+              <div class="scale"><span>1</span><span id="sc-freq"></span></div>
               <div class="q-actions"><button class="btn ghost" onclick="qGo(1)">Back</button><button class="btn" onclick="qGo(3)">Next</button></div>
             </div>
             <div class="q-step" data-q="3" hidden>
               <p class="meta">3 of 3</p><h3 tabindex="-1">Total spent?</h3>
               <div class="answer" id="v-mon"></div>
               <input type="range" id="s-mon" min="10" max="3000" step="5" aria-label="Total spent in BRL" oninput="setField('mon', this.value)">
-              <div class="scale"><span>R$ 10</span><span>R$ 3,000</span></div>
+              <div class="scale"><span id="sc-mon0"></span><span id="sc-mon1"></span></div>
               <p class="meta mt">≈ <b id="v-aov"></b> per order</p>
               <div class="q-actions"><button class="btn ghost" onclick="qGo(2)">Back</button><button class="btn" onclick="qGo(4)">Score</button></div>
             </div>
@@ -690,14 +706,14 @@
         <div class="card mt">
           <div class="card-head"><span class="card-title">Batch scoring · real customers</span><button class="btn sm" id="batch-run">Score all</button></div>
           <div class="table-wrap"><table>
-            <thead><tr><th>customer_unique_id</th><th class="num">Recency</th><th class="num">Orders</th><th class="num">Spent (R$)</th><th class="num">Risk</th><th>Action</th></tr></thead>
+            <thead><tr><th>customer_unique_id</th><th class="num">Recency</th><th class="num">Orders</th><th class="num">Spent</th><th class="num">Risk</th><th>Action</th></tr></thead>
             <tbody id="batch-body"></tbody>
           </table></div>
         </div>
       </section>
 
       <!-- ========== DASHBOARD ========== -->
-      <section class="page" data-page="dashboard" data-title="Dashboard" data-group="Reporting" hidden>
+      <section class="page" data-needs="mart" data-page="dashboard" data-title="Dashboard" data-group="Reporting" hidden>
         <div class="dash-title">
           <div>
             <h1 tabindex="-1">Sales</h1>
@@ -728,7 +744,7 @@
             <button class="kcell" data-metric="orders" aria-pressed="false"><div class="k-label">Orders</div><div class="k-value" id="d-ord">–</div><div class="k-sub" id="d-ord-f"></div></button>
             <button class="kcell" data-metric="aov" aria-pressed="false"><div class="k-label">Avg order value</div><div class="k-value" id="d-aov">–</div><div class="k-sub" id="d-aov-f"></div></button>
             <div class="kcell"><div class="k-label">Best day</div><div class="k-value" id="d-peak">–</div><div class="k-sub" id="d-peak-f"></div></div>
-            <div class="kcell"><div class="k-label">Customers</div><div class="k-value">96,096</div><div class="k-sub warn">Power BI card: 99,441 (IDs)</div></div>
+            <div class="kcell"><div class="k-label">Customers</div><div class="k-value" id="d-cust">–</div><div class="k-sub warn" id="d-cust-f"></div></div>
           </div>
           <div class="chart-head">
             <span class="card-title" id="d-chart-title">Revenue per day</span>
@@ -743,12 +759,12 @@
           </div>
         </div>
 
-        <div class="grid g2 mt" style="align-items:start">
-          <div class="card">
-            <div class="card-head"><span class="card-title">Revenue by customer state</span><span class="meta" id="d-states-meta">Top 10 · select to filter</span></div>
+        <div class="grid g2 mt" style="align-items:start" id="d-lists">
+          <div class="card" id="d-states-card">
+            <div class="card-head"><span class="card-title" id="d-states-title">Revenue by customer state</span><span class="meta" id="d-states-meta">Top 10 · select to filter</span></div>
             <div class="rank" id="d-states"></div>
           </div>
-          <div class="card">
+          <div class="card" id="d-cat-card">
             <div class="card-head"><span class="card-title">Revenue by category</span><span class="meta" id="cat-meta"></span></div>
             <div class="rank" id="cat-bars"></div>
           </div>
@@ -791,17 +807,25 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const fmt = n => Number(n).toLocaleString('en-US');
   const pct = (n, d = 1) => (n * 100).toFixed(d) + '%';
-  const brl = n => 'R$ ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let CUR = 'R$';
+  const withCur = s => CUR ? CUR + ' ' + s : s;
+  const brl = n => withCur(Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const money = v => withCur(Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1) + 'K' : v.toFixed(0));
+  const short = v => v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'K' : String(v);
+  const bytes = b => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tick = () => new Promise(r => setTimeout(r, 0));
   let fast = false;
   const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : (fast ? ms / 4 : ms)));
   function log(id, html) { const t = $(id); t.insertAdjacentHTML('beforeend', html + '\n'); t.scrollTop = t.scrollHeight; }
   function bars(id, rows, max, fv) {
-    $(id).innerHTML = rows.map(r => '<div class="bar-row' + (r.alt ? ' alt' : '') + '"><span class="lab" title="' + r.label + '">' + r.label +
+    $(id).innerHTML = rows.map(r => '<div class="bar-row' + (r.alt ? ' alt' : '') + '"><span class="lab" title="' + esc(r.label) + '">' + esc(r.label) +
       '</span><span class="track"><span class="fill" style="width:' + Math.max(0.5, r.value / max * 100) + '%"></span></span><span class="val">' + fv(r.value) + '</span></div>').join('');
   }
   function seg(id, fn) {
@@ -810,29 +834,49 @@
       fn(b.dataset.v);
     }));
   }
+  function pressSeg(id, v) { $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === v))); }
+
+  // ---------- Dataset state ----------
+  // MODE 'example' uses the precomputed Olist results; 'custom' computes everything from uploaded files in the browser.
+  let MODE = 'example', apiOk = false;
+  let DATA = null, EXAMPLE = null, runs = [], activeRun = null, evalSet = 'test';
+  let STATUS = {};
+  const TH = Array.from({ length: 19 }, (_, i) => +(0.05 + i * 0.05).toFixed(2));
+  const GRID = Array.from({ length: 21 }, (_, i) => +(i * 0.05).toFixed(2));
+  // Context that differs between the example and an upload
+  let CTX = null;
+  const EX_CTX = {
+    riskDays: 120, vipMon: 1000, lim: { rec: [1, 600], freq: [1, 25], mon: [10, 3000] }, monStep: 5,
+    examples: [[10, 1, 80], [35, 3, 390], [15, 6, 1250], [450, 1, 45]], defaults: { rec: 30, freq: 2, mon: 200 }, lifeRepeat: 0,
+    overview: [['99,441', 'Sep 2016 – Oct 2018'], ['96,096', 'from 99,441 customer IDs'], ['97.0%', '73,157 of 75,387'], ['64.7%', 'no order in 120 days']],
+    customers: ['96,096', 'Power BI card: 99,441 (IDs)'], region: 'state', regionPlural: 'states'
+  };
+  function resetStatus() {
+    STATUS = MODE === 'example'
+      ? { ingest: 'idle', quality: 'idle', clean: 'idle', insights: 'ok', train: 'ok', evaluate: 'ok', predict: apiOk ? 'ok' : 'idle', dashboard: 'ok' }
+      : { ingest: FILES.some(f => f.loaded) ? 'ok' : 'idle', quality: 'idle', clean: 'idle', insights: 'idle', train: 'idle', evaluate: 'idle', predict: 'idle', dashboard: 'idle' };
+  }
 
   // ---------- Pages and module status ----------
   const PAGES = [...document.querySelectorAll('.page')];
   const ORDER = PAGES.map(p => p.dataset.page);
-  const STATUS = { ingest: 'idle', quality: 'idle', clean: 'idle', insights: 'ok', train: 'ok', evaluate: 'ok', predict: 'idle', dashboard: 'ok' };
-  let DATA = null, runs = [], activeRun = null, evalSet = 'test';
   const MODULE_STAT = {
-    ingest: () => STATUS.ingest === 'ok' ? '9 tables · 1.55M rows' : 'Raw files waiting',
-    quality: () => STATUS.quality === 'ok' ? '4 checks · 3 issues found' : 'Checks pending',
-    clean: () => STATUS.clean === 'ok' ? '18 / 18 tests passed' : 'DAG not triggered',
-    insights: () => '75,387 customers',
-    train: () => runs.length + (runs.length === 1 ? ' run' : ' runs'),
-    evaluate: () => activeRun ? 'AUC ' + activeRun.m.auc_test.toFixed(3) : 'Loading',
-    predict: () => STATUS.predict === 'ok' ? 'API live' : 'Checking API',
-    dashboard: () => 'R$ 13.59M revenue'
+    ingest: () => { const l = FILES.filter(f => f.loaded); return l.length ? l.length + (l.length === 1 ? ' table · ' : ' tables · ') + short(l.reduce((s, f) => s + f.rows, 0)) + ' rows' : FILES.length ? FILES.length + ' files waiting' : 'No files'; },
+    quality: () => STATUS.quality === 'ok' ? CHECKS.length + ' checks · ' + CHECKS.filter(c => c.state === 'issue').length + ' issues' : 'Checks pending',
+    clean: () => STATUS.clean === 'ok' ? TESTS.filter(t => t.pass).length + ' / ' + TESTS.length + ' tests passed' : STATUS.clean === 'err' ? 'Failed' : 'Not run',
+    insights: () => DATA && DATA.insights ? fmt(DATA.insights.n) + ' customers' : 'Needs data',
+    train: () => runs.length ? runs.length + (runs.length === 1 ? ' run' : ' runs') : 'No runs',
+    evaluate: () => activeRun ? 'AUC ' + activeRun.m.auc_test.toFixed(3) : 'No model',
+    predict: () => MODE === 'example' ? (apiOk ? 'API live' : 'Checking API') : activeRun ? 'Browser model' : 'No model',
+    dashboard: () => S ? money(S.revenue.reduce((a, b) => a + b, 0)) + ' revenue' : 'Needs data'
   };
   function setStatus(k, v) { STATUS[k] = v; renderStatus(); }
   function renderStatus() {
     document.querySelectorAll('[data-sdot]').forEach(d => { d.className = 'sdot ' + ({ ok: 'ok', run: 'run' }[STATUS[d.dataset.sdot]] || ''); });
     $('modules').innerHTML = PAGES.filter(p => STATUS[p.dataset.page]).map(p => {
       const k = p.dataset.page, st = STATUS[k];
-      const badge = st === 'ok' ? '<span class="badge ok">Healthy</span>' : st === 'run' ? '<span class="badge run">Running</span>' : '<span class="badge">Not run</span>';
-      return '<a class="module" href="#' + k + '"><span class="m-top"><span>' + p.dataset.group + '</span>' + badge + '</span><b>' + p.dataset.title + '</b><span class="m-stat">' + MODULE_STAT[k]() + '</span></a>';
+      const badge = st === 'ok' ? '<span class="badge ok">Healthy</span>' : st === 'run' ? '<span class="badge run">Running</span>' : st === 'err' ? '<span class="badge err">Failed</span>' : '<span class="badge">Not run</span>';
+      return '<a class="module" href="#' + k + '"><span class="m-top"><span>' + p.dataset.group + '</span>' + badge + '</span><b>' + p.dataset.title + '</b><span class="m-stat">' + esc(MODULE_STAT[k]()) + '</span></a>';
     }).join('');
     const ok = Object.values(STATUS).filter(v => v === 'ok').length;
     $('pipeline-summary').innerText = ok + ' of ' + Object.keys(STATUS).length + ' healthy';
@@ -843,8 +887,13 @@
   $('nav').innerHTML = PAGES.map(p => {
     const g = p.dataset.group, head = g !== lastGroup && g !== 'Workspace' && g !== 'Summary' ? '<div class="nav-group">' + g + '</div>' : '';
     lastGroup = g;
-    return head + '<a href="#' + p.dataset.page + '">' + p.dataset.title + (STATUS[p.dataset.page] ? '<span class="sdot" data-sdot="' + p.dataset.page + '"></span>' : '') + '</a>';
+    return head + '<a href="#' + p.dataset.page + '">' + p.dataset.title + (['overview', 'summary'].includes(p.dataset.page) ? '' : '<span class="sdot" data-sdot="' + p.dataset.page + '"></span>') + '</a>';
   }).join('');
+  document.querySelectorAll('.page[data-needs]').forEach(p => {
+    const d = document.createElement('div'); d.className = 'card empty-mart';
+    d.innerHTML = '<b>No customer data yet</b><div class="chips"><a class="btn sm" href="#clean">Run pipeline</a><a class="btn ghost sm" href="#ingest">Upload files</a></div>';
+    p.children[0].after(d);
+  });
   let current = null;
   function show(id, focus) {
     if (!ORDER.includes(id)) id = 'overview';
@@ -875,14 +924,72 @@
     if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
     if (e.key === 'ArrowRight') stepPage(1); else if (e.key === 'ArrowLeft') stepPage(-1);
   });
-  const pnT = $('pn-toggle');
-  function setNotes(on) { document.body.classList.toggle('presenter', on); pnT.checked = on; try { localStorage.setItem('pn', on ? '1' : '0'); } catch (e) {} }
-  pnT.onchange = () => setNotes(pnT.checked);
-  try { setNotes(localStorage.getItem('pn') === '1'); } catch (e) {}
+  // Talk notes stay available to the presenter with ?notes in the address
+  if (new URLSearchParams(location.search).has('notes')) document.body.classList.add('presenter');
+
+  // ---------- Parsing helpers ----------
+  const DAY = 864e5;
+  const isoDay = d => new Date(d * DAY).toISOString().slice(0, 10);
+  function ymd(y, mo, d) {
+    if (y < 1900 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return NaN;
+    const t = Date.UTC(y, mo - 1, d);
+    return new Date(t).getUTCDate() === d ? t / DAY : NaN;
+  }
+  function parseDay(v, order) {
+    const s = String(v == null ? '' : v).trim(); let m;
+    if (!s) return NaN;
+    if ((m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:$|[T\s])/.exec(s))) return ymd(+m[1], +m[2], +m[3]);
+    if ((m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4}|\d{2})(?:$|[T\s,])/.exec(s))) {
+      const a = +m[1], b = +m[2]; let y = +m[3]; if (y < 100) y += y < 70 ? 2000 : 1900;
+      const dayFirst = order === 'dmy' || (order !== 'mdy' && a > 12);
+      return dayFirst ? ymd(y, b, a) : ymd(y, a, b);
+    }
+    if (/^\d{8}$/.test(s)) return ymd(+s.slice(0, 4), +s.slice(4, 6), +s.slice(6, 8));
+    if (/[a-z]/i.test(s)) { const t = Date.parse(s); if (!isNaN(t)) { const d = new Date(t); return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate()); } }
+    return NaN;
+  }
+  function detectOrder(values) {
+    for (const v of values) {
+      const m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.]/.exec(String(v).trim());
+      if (m) { if (+m[1] > 12) return 'dmy'; if (+m[2] > 12) return 'mdy'; }
+    }
+    return 'mdy';
+  }
+  function toNum(v) {
+    let s = String(v == null ? '' : v).trim(); if (!s) return NaN;
+    let neg = false;
+    if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1).trim(); }
+    s = s.replace(/^(R\$|US\$|[$€£₹¥])\s*/i, '').replace(/\s*(R\$|[$€£₹¥]|USD|EUR|BRL|INR|GBP)$/i, '');
+    if (s[0] === '-') { neg = !neg; s = s.slice(1); } else if (s[0] === '+') s = s.slice(1);
+    s = s.replace(/\s/g, '');
+    if (!/^(\d[\d.,]*|\.\d+)$/.test(s)) return NaN;
+    const c = s.lastIndexOf(','), d = s.lastIndexOf('.');
+    if (c >= 0 && d >= 0) s = c > d ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+    else if (c >= 0) s = /^\d+,\d{1,2}$/.test(s) ? s.replace(',', '.') : s.replace(/,/g, '');
+    else if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
+    const n = parseFloat(s); return isNaN(n) ? NaN : (neg ? -n : n);
+  }
+  function profileColumns(header, rows) {
+    return header.map((name, j) => {
+      let empty = 0, numeric = 0, ints = 0, neg = 0, nonEmpty = 0, dateOk = 0, dateTried = 0;
+      for (let k = 0; k < rows.length; k++) {
+        const raw = rows[k][j], v = raw == null ? '' : String(raw).trim();
+        if (!v) { empty++; continue; }
+        nonEmpty++;
+        const n = toNum(v);
+        if (!isNaN(n)) { numeric++; if (Number.isInteger(n)) ints++; if (n < 0) neg++; }
+        else if (dateTried < 3000) { dateTried++; if (!isNaN(parseDay(v, 'auto'))) dateOk++; }
+      }
+      let type = 'text';
+      if (nonEmpty && numeric / nonEmpty >= 0.95) type = ints === numeric ? 'integer' : 'decimal';
+      else if (dateTried && dateOk / dateTried >= 0.9) type = 'date';
+      return { name, type, empty, nonEmpty, neg };
+    });
+  }
 
   // ---------- Ingestion ----------
   const T = 'text', B = 'bigint', F = 'float';
-  const RAW = [
+  const EXAMPLE_RAW = [
     ['olist_customers_dataset', 99441, [['customer_id', T], ['customer_unique_id', T], ['customer_zip_code_prefix', B], ['customer_city', T], ['customer_state', T]]],
     ['olist_geolocation_dataset', 1000163, [['geolocation_zip_code_prefix', B], ['geolocation_lat', F], ['geolocation_lng', F], ['geolocation_city', T], ['geolocation_state', T]]],
     ['olist_order_items_dataset', 112650, [['order_id', T], ['order_item_id', B], ['product_id', T], ['seller_id', T], ['shipping_limit_date', T], ['price', F], ['freight_value', F]]],
@@ -893,118 +1000,347 @@
     ['olist_sellers_dataset', 3095, [['seller_id', T], ['seller_zip_code_prefix', B], ['seller_city', T], ['seller_state', T]]],
     ['product_category_name_translation', 71, [['product_category_name', T], ['product_category_name_english', T]]]
   ];
-  const loaded = new Set();
-  $('files').innerHTML = RAW.map(([n, r], i) => '<label class="file" id="f' + i + '"><input type="checkbox" data-i="' + i + '" checked><div><span class="fn" title="' + n + '.csv">' + n + '.csv</span><span class="meta" id="fs' + i + '">' + fmt(r) + ' rows · not loaded</span></div></label>').join('');
-  $('files').addEventListener('click', e => {
-    const f = e.target.closest('.file'); if (!f) return;
-    const i = Number(f.id.slice(1));
-    if (loaded.has(i) && e.target.tagName !== 'INPUT') { e.preventDefault(); showSchema(i); }
-  });
-  $('files').addEventListener('change', syncSelBtn);
-  function syncSelBtn() { const all = [...$('files').querySelectorAll('input')].every(b => b.checked); $('ing-all').innerText = all ? 'Clear selection' : 'Select all'; }
-  $('ing-all').onclick = () => {
-    const boxes = [...$('files').querySelectorAll('input')], all = boxes.every(b => b.checked);
-    boxes.forEach(b => { b.checked = !all; }); syncSelBtn();
-  };
-  function showSchema(i) {
-    const [n, r, cols] = RAW[i];
-    document.querySelectorAll('.file').forEach(f => f.classList.toggle('sel', f.id === 'f' + i));
-    $('schema-title').innerText = 'public.' + n;
-    $('schema-meta').innerText = fmt(r) + ' rows · ' + cols.length + ' columns';
-    $('schema-body').innerHTML = cols.map(([c, t]) => '<tr><td><code>' + c + '</code></td><td>' + (/(date|timestamp|_at)$/.test(c) && t === T ? '<span class="badge warn">text · should be timestamp</span>' : '<span class="badge">' + t + '</span>') + '</td></tr>').join('');
+  const exampleFiles = () => EXAMPLE_RAW.map(([n, r, cols]) => ({
+    name: n + '.csv', table: n, rows: r, example: true, loaded: false, sel: true,
+    cols: cols.map(([c, t]) => ({ name: c, type: t, flag: /(date|timestamp|_at)$/.test(c) && t === T ? 'text · should be timestamp' : '' }))
+  }));
+  let FILES = exampleFiles(), schemaIdx = -1, renderQueued = false;
+  const tableName = n => n.replace(/\.[^.]+$/, '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'table';
+  function fileStatus(f) {
+    if (f.error) return 'Error: ' + esc(f.error);
+    if (f.loading) return 'loading… ' + Math.round((f.progress || 0) * 100) + '%';
+    if (f.loaded) return fmt(f.rows) + ' rows · ' + f.cols.length + ' columns';
+    return f.example ? fmt(f.rows) + ' rows · not loaded' : bytes(f.size) + ' · not loaded';
   }
+  function renderFiles() {
+    renderQueued = false;
+    $('drop-empty').hidden = FILES.length > 0;
+    $('files').hidden = !FILES.length;
+    $('files').innerHTML = FILES.map((f, i) =>
+      '<div class="file' + (f.loaded ? ' loaded' : '') + (f.loading ? ' loading' : '') + (i === schemaIdx ? ' sel' : '') + '" data-i="' + i + '">' +
+      (f.example ? '<input type="checkbox" data-i="' + i + '"' + (f.sel ? ' checked' : '') + ' aria-label="Select ' + esc(f.name) + '">' : '') +
+      '<div class="f-body"><span class="fn" title="' + esc(f.name) + '">' + esc(f.name) + '</span><span class="meta">' + fileStatus(f) + '</span></div>' +
+      '<button class="x" type="button" data-rm="' + i + '" aria-label="Remove ' + esc(f.name) + '">×</button></div>').join('');
+    const l = FILES.filter(f => f.loaded);
+    $('ing-status').innerText = FILES.length ? l.length + ' of ' + FILES.length + ' loaded' + (l.length ? ' · ' + fmt(l.reduce((s, f) => s + f.rows, 0)) + ' rows' : '') : '';
+    $('ing-run').hidden = MODE !== 'example' || !FILES.length;
+    $('ing-example').hidden = MODE === 'example' && FILES.length === EXAMPLE_RAW.length;
+    $('ing-clear').hidden = !FILES.length;
+  }
+  const queueFiles = () => { if (!renderQueued) { renderQueued = true; requestAnimationFrame(renderFiles); } };
+  function clearSchema() { $('schema-title').innerText = 'Table schema'; $('schema-meta').innerText = ''; $('schema-body').innerHTML = '<tr><td colspan="2" class="muted">No table selected</td></tr>'; }
+  function showSchema(i) {
+    const f = FILES[i]; if (!f || !f.loaded) return;
+    schemaIdx = i; renderFiles();
+    $('schema-title').innerText = 'public.' + f.table;
+    $('schema-meta').innerText = fmt(f.rows) + ' rows · ' + f.cols.length + ' columns';
+    $('schema-body').innerHTML = f.cols.map(c => {
+      const flag = f.example ? c.flag : c.type === 'date' ? 'text · should be date' : '';
+      return '<tr><td><code>' + esc(c.name) + '</code></td><td>' + (flag ? '<span class="badge warn">' + flag + '</span>' : '<span class="badge">' + c.type + '</span>') +
+        (!f.example && c.empty ? ' <span class="badge warn">' + fmt(c.empty) + ' empty</span>' : '') + '</td></tr>';
+    }).join('');
+  }
+  $('files').addEventListener('click', e => {
+    const rm = e.target.closest('[data-rm]');
+    if (rm) { removeFile(Number(rm.dataset.rm)); return; }
+    if (e.target.tagName === 'INPUT') return;
+    const f = e.target.closest('.file'); if (f) showSchema(Number(f.dataset.i));
+  });
+  $('files').addEventListener('change', e => { if (e.target.dataset.i != null) FILES[Number(e.target.dataset.i)].sel = e.target.checked; });
+  function removeFile(i) {
+    if (FILES[i].loading) return;
+    FILES.splice(i, 1);
+    if (schemaIdx === i) { schemaIdx = -1; clearSchema(); } else if (schemaIdx > i) schemaIdx--;
+    if (MODE === 'example') { if (!FILES.length) enterCustom(); else renderFiles(); }
+    else dataChanged();
+  }
+  $('ing-clear').onclick = () => {
+    if (FILES.some(f => f.loading)) return;
+    FILES = []; schemaIdx = -1; clearSchema(); $('ing-term').innerHTML = '<span class="dim">No files.</span>';
+    if (MODE === 'example') enterCustom(); else dataChanged();
+  };
+  $('ing-example').onclick = () => enterExample();
+  $('ing-upload').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ing-file').click(); } });
+  $('ing-file').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
+  const card = $('files-card');
+  ['dragenter', 'dragover'].forEach(t => card.addEventListener(t, e => { e.preventDefault(); card.classList.add('dragging'); }));
+  ['dragleave', 'drop'].forEach(t => card.addEventListener(t, e => { e.preventDefault(); if (t === 'drop' || !card.contains(e.relatedTarget)) card.classList.remove('dragging'); }));
+  card.addEventListener('drop', e => addFiles([...e.dataTransfer.files]));
+
+  async function addFiles(list) {
+    const ok = list.filter(f => /\.(csv|tsv|txt)$/i.test(f.name));
+    if (!ok.length) { $('ing-status').innerText = 'Only .csv, .tsv or .txt files'; return; }
+    if (!window.Papa) { $('ing-status').innerText = 'CSV parser failed to load. Check the connection and reload.'; return; }
+    if (MODE === 'example') enterCustom();
+    if (FILES.some(f => f.loading)) return;
+    for (const file of ok) {
+      const ix = FILES.findIndex(f => f.name === file.name);
+      const entry = { name: file.name, table: tableName(file.name), size: file.size, file, example: false, loaded: false };
+      if (ix >= 0) FILES[ix] = entry; else FILES.push(entry);
+    }
+    dataChanged(true);
+    $('ing-term').innerHTML = '<span class="dim">$ ingest ' + ok.length + (ok.length === 1 ? ' file' : ' files') + '</span>\n';
+    setStatus('ingest', 'run');
+    for (const f of FILES.filter(x => !x.loaded && !x.example)) await parseFile(f);
+    const l = FILES.filter(f => f.loaded);
+    log('ing-term', '<span class="dim">Done · ' + l.length + ' tables · ' + fmt(l.reduce((s, f) => s + f.rows, 0)) + ' rows</span>');
+    const first = FILES.findIndex(f => f.loaded); if (first >= 0) showSchema(first);
+    setStatus('ingest', l.length ? 'ok' : 'idle');
+    autoMap(); renderMapping(); renderOverview();
+  }
+  function parseFile(f) {
+    return new Promise(resolve => {
+      f.loading = true; f.progress = 0; f.error = null; queueFiles();
+      log('ing-term', 'Loading ' + esc(f.table));
+      let header = null; const rows = [];
+      Papa.parse(f.file, {
+        worker: true, skipEmptyLines: 'greedy',
+        chunk: res => {
+          for (const r of res.data) { if (!header) header = r; else rows.push(r); }
+          f.progress = Math.min(1, (res.meta.cursor || 0) / Math.max(1, f.size)); queueFiles();
+        },
+        complete: () => {
+          const seen = {};
+          f.header = (header || []).map((h, j) => {
+            let n = String(h == null ? '' : h).replace(/^﻿/, '').trim() || 'column_' + (j + 1);
+            if (seen[n]) n = n + '_' + (++seen[n]); else seen[n] = 1;
+            return n;
+          });
+          f.data = rows; f.rows = rows.length; f.cols = profileColumns(f.header, rows);
+          f.loading = false; f.loaded = true; f.file = null;
+          log('ing-term', '<span class="ok">' + esc(f.table) + ' loaded: ' + rows.length + ' rows</span>');
+          renderFiles(); resolve();
+        },
+        error: err => { f.loading = false; f.error = err.message || 'could not read'; log('ing-term', '<span class="w">' + esc(f.table) + ': ' + esc(f.error) + '</span>'); renderFiles(); resolve(); }
+      });
+    });
+  }
+  // Example dataset: a replay of the recorded ingestion run
   let ingBusy = false;
   async function runIngestion(all) {
-    if (ingBusy) return; ingBusy = true;
-    const sel = all ? RAW.map((_, i) => i) : [...$('files').querySelectorAll('input:checked')].map(b => Number(b.dataset.i));
+    if (MODE !== 'example' || ingBusy) return; ingBusy = true;
+    const sel = FILES.map((f, i) => i).filter(i => all || FILES[i].sel);
     if (!sel.length) { $('ing-status').innerText = 'Select at least one file'; ingBusy = false; return; }
     $('ing-run').disabled = true; setStatus('ingest', 'run');
     $('ing-term').innerHTML = '<span class="dim">$ python src/ingestion.py</span>\n';
     for (let k = 0; k < sel.length; k++) {
-      const i = sel[k], [n, r] = RAW[i];
-      $('f' + i).className = 'file loading'; $('fs' + i).innerText = 'loading…';
-      log('ing-term', 'Loading ' + n);
-      await wait(n.includes('geolocation') ? 900 : 300);
-      loaded.add(i);
-      $('f' + i).className = 'file loaded'; $('fs' + i).innerText = fmt(r) + ' rows · loaded · view schema';
-      log('ing-term', '<span class="ok">' + n + ' loaded: ' + r + ' rows</span>');
+      const f = FILES[sel[k]];
+      f.loading = true; f.progress = 0.5; renderFiles();
+      log('ing-term', 'Loading ' + f.table);
+      await wait(f.table.includes('geolocation') ? 900 : 300);
+      f.loading = false; f.loaded = true; renderFiles();
+      log('ing-term', '<span class="ok">' + f.table + ' loaded: ' + f.rows + ' rows</span>');
       $('ing-prog').style.width = ((k + 1) / sel.length * 100) + '%';
     }
-    const rows = [...loaded].reduce((s, i) => s + RAW[i][1], 0);
-    $('ing-status').innerText = loaded.size + ' of 9 loaded · ' + fmt(rows) + ' rows';
-    log('ing-term', '<span class="dim">Done · ' + loaded.size + ' tables · ' + fmt(rows) + ' rows</span>');
-    showSchema(loaded.has(5) ? 5 : sel[0]);
+    const l = FILES.filter(f => f.loaded);
+    log('ing-term', '<span class="dim">Done · ' + l.length + ' tables · ' + fmt(l.reduce((s, f) => s + f.rows, 0)) + ' rows</span>');
+    showSchema(FILES.findIndex(f => f.table === 'olist_orders_dataset' && f.loaded) >= 0 ? FILES.findIndex(f => f.table === 'olist_orders_dataset') : sel[0]);
     $('ing-run').disabled = false; ingBusy = false;
-    setStatus('ingest', loaded.size === 9 ? 'ok' : 'idle');
+    setStatus('ingest', l.length === EXAMPLE_RAW.length ? 'ok' : 'idle');
   }
   $('ing-run').onclick = () => runIngestion(false);
 
   // ---------- Data quality ----------
-  const CHECKS = [
-    { name: 'Duplicate customers', table: 'olist_customers_dataset', type: 'Uniqueness', result: '99,441 IDs → 96,096 people', rows: 3345, pass: false,
-      sql: '<span class="k">SELECT</span> COUNT(customer_id), COUNT(<span class="k">DISTINCT</span> customer_unique_id)\n<span class="k">FROM</span> olist_customers_dataset;',
-      note: 'A new customer_id per order. Counting IDs overstates customers by 3,345.' },
-    { name: 'Missing delivery date', table: 'olist_orders_dataset', type: 'Completeness', result: '2,965 null', rows: 2965, pass: false,
-      sql: '<span class="k">SELECT</span> COUNT(*) - COUNT(order_delivered_customer_date)\n<span class="k">FROM</span> olist_orders_dataset;',
-      note: 'Cancelled or in-transit orders are legitimate gaps. Handled by the delivered-only rule.' },
-    { name: 'Missing product category', table: 'olist_products_dataset', type: 'Completeness', result: '610 null', rows: 610, pass: false,
-      sql: '<span class="k">SELECT</span> COUNT(*) <span class="k">FROM</span> olist_products_dataset\n<span class="k">WHERE</span> product_category_name <span class="k">IS NULL</span>;',
-      note: 'Kept and shown as (Blank) in the dashboard.' },
-    { name: 'Order ID unique', table: 'olist_orders_dataset', type: 'Uniqueness', result: '99,441 / 99,441', rows: 0, pass: true,
-      sql: '<span class="k">SELECT</span> COUNT(*), COUNT(<span class="k">DISTINCT</span> order_id)\n<span class="k">FROM</span> olist_orders_dataset;',
-      note: 'Every order appears once.' }
+  const sqlK = w => '<span class="k">' + w + '</span>';
+  const EX_CHECKS = [
+    { name: 'Duplicate customers', table: 'olist_customers_dataset', type: 'Uniqueness', result: '99,441 IDs → 96,096 people', rows: 3345, state: 'issue',
+      sql: sqlK('SELECT') + ' COUNT(customer_id), COUNT(' + sqlK('DISTINCT') + ' customer_unique_id)\n' + sqlK('FROM') + ' olist_customers_dataset;' },
+    { name: 'Missing delivery date', table: 'olist_orders_dataset', type: 'Completeness', result: '2,965 null', rows: 2965, state: 'issue',
+      sql: sqlK('SELECT') + ' COUNT(*) - COUNT(order_delivered_customer_date)\n' + sqlK('FROM') + ' olist_orders_dataset;' },
+    { name: 'Missing product category', table: 'olist_products_dataset', type: 'Completeness', result: '610 null', rows: 610, state: 'issue',
+      sql: sqlK('SELECT') + ' COUNT(*) ' + sqlK('FROM') + ' olist_products_dataset\n' + sqlK('WHERE') + ' product_category_name ' + sqlK('IS NULL') + ';' },
+    { name: 'Order ID unique', table: 'olist_orders_dataset', type: 'Uniqueness', result: '99,441 / 99,441', rows: 0, state: 'pass',
+      sql: sqlK('SELECT') + ' COUNT(*), COUNT(' + sqlK('DISTINCT') + ' order_id)\n' + sqlK('FROM') + ' olist_orders_dataset;' }
   ];
-  let chkOpen = -1, chkDone = 0;
+  let CHECKS = EX_CHECKS, chkOpen = -1, chkDone = 0;
   function renderChecks() {
-    $('chk-body').innerHTML = CHECKS.map((c, i) => {
+    if (!CHECKS.length) { $('chk-body').innerHTML = '<tr><td colspan="5" class="muted">' + (FILES.some(f => f.loaded) ? 'Not run' : 'No tables loaded') + '</td></tr>'; }
+    else $('chk-body').innerHTML = CHECKS.map((c, i) => {
       const done = i < chkDone;
-      const st = !done ? '<span class="badge">Pending</span>' : c.pass ? '<span class="badge ok">Pass</span>' : '<span class="badge warn">Issue</span>';
-      let row = '<tr class="click' + (i === chkOpen ? ' sel' : '') + '" data-i="' + i + '"><td>' + c.name + '</td><td class="id">' + c.table + '</td><td>' + c.type + '</td><td class="num">' + (done ? c.result : '–') + '</td><td>' + st + '</td></tr>';
+      const st = !done ? '<span class="badge">Pending</span>' : c.state === 'pass' ? '<span class="badge ok">Pass</span>' : c.state === 'issue' ? '<span class="badge warn">Issue</span>' : '<span class="badge">Info</span>';
+      let row = '<tr class="click' + (i === chkOpen ? ' sel' : '') + '" data-i="' + i + '"><td>' + esc(c.name) + '</td><td class="id">' + esc(c.table) + '</td><td>' + c.type + '</td><td class="num">' + (done ? esc(c.result) : '–') + '</td><td>' + st + '</td></tr>';
       if (i === chkOpen) row += '<tr class="chk-detail"><td colspan="5"><div class="code">' + c.sql + '</div></td></tr>';
       return row;
     }).join('');
     const d = CHECKS.slice(0, chkDone);
-    $('k-pass').innerText = chkDone ? d.filter(c => c.pass).length : '–';
-    $('k-fail').innerText = chkDone ? d.filter(c => !c.pass).length : '–';
+    $('k-total').innerText = CHECKS.length || '–';
+    $('k-pass').innerText = chkDone ? d.filter(c => c.state === 'pass').length : '–';
+    $('k-fail').innerText = chkDone ? d.filter(c => c.state === 'issue').length : '–';
     $('k-rows').innerText = chkDone ? fmt(d.reduce((s, c) => s + c.rows, 0)) : '–';
   }
   $('chk-body').addEventListener('click', e => {
     const tr = e.target.closest('tr.click'); if (!tr) return;
     const i = Number(tr.dataset.i); chkOpen = chkOpen === i ? -1 : i; renderChecks();
   });
+  async function buildChecks() {
+    const out = [], q = n => '"' + esc(n) + '"';
+    for (const f of FILES.filter(x => x.loaded)) {
+      const t = esc(f.table);
+      const worst = f.cols.reduce((a, c) => c.empty > a.empty ? c : a, f.cols[0] || { empty: 0, name: '' });
+      out.push({ name: 'Empty values', table: f.table, type: 'Completeness', result: worst && worst.empty ? fmt(worst.empty) + ' in ' + worst.name : '0', rows: worst ? worst.empty : 0, state: worst && worst.empty ? 'issue' : 'pass',
+        sql: sqlK('SELECT') + ' COUNT(*) ' + sqlK('FROM') + ' ' + t + '\n' + sqlK('WHERE') + ' ' + q(worst ? worst.name : '') + ' ' + sqlK('IS NULL') + ';' });
+      const seen = new Set(); let dup = 0;
+      for (let k = 0; k < f.data.length; k++) { const key = f.data[k].join('\u0001'); if (seen.has(key)) dup++; else seen.add(key); if (k % 50000 === 0) await tick(); }
+      out.push({ name: 'Duplicate rows', table: f.table, type: 'Uniqueness', result: fmt(dup), rows: dup, state: dup ? 'issue' : 'pass',
+        sql: sqlK('SELECT') + ' COUNT(*) - COUNT(' + sqlK('DISTINCT') + ' *) ' + sqlK('FROM') + ' ' + t + ';' });
+      const key = f.cols[0];
+      if (key && /(^|_|\s)?id$/i.test(key.name)) {
+        const set = new Set(); for (const r of f.data) if (r[0] !== '' && r[0] != null) set.add(r[0]);
+        const same = set.size === key.nonEmpty;
+        out.push({ name: 'Key ' + key.name, table: f.table, type: 'Uniqueness', result: fmt(set.size) + ' distinct of ' + fmt(key.nonEmpty), rows: 0, state: same ? 'pass' : 'info',
+          sql: sqlK('SELECT') + ' COUNT(*), COUNT(' + sqlK('DISTINCT') + ' ' + q(key.name) + ')\n' + sqlK('FROM') + ' ' + t + ';' });
+      }
+      const dates = f.cols.filter(c => c.type === 'date');
+      if (dates.length) out.push({ name: 'Dates stored as text', table: f.table, type: 'Validity', result: dates.map(c => c.name).join(', '), rows: 0, state: 'issue',
+        sql: sqlK('SELECT') + ' ' + dates.map(c => q(c.name) + '::' + sqlK('date')).join(', ') + '\n' + sqlK('FROM') + ' ' + t + ';' });
+      const amt = f.cols.filter(c => (c.type === 'integer' || c.type === 'decimal') && /(price|amount|total|revenue|sales|value|cost|qty|quantity)/i.test(c.name));
+      if (amt.length) { const neg = amt.reduce((s, c) => s + c.neg, 0);
+        out.push({ name: 'Negative amounts', table: f.table, type: 'Validity', result: fmt(neg), rows: neg, state: neg ? 'issue' : 'pass',
+          sql: sqlK('SELECT') + ' COUNT(*) ' + sqlK('FROM') + ' ' + t + '\n' + sqlK('WHERE') + ' ' + amt.map(c => q(c.name) + ' &lt; 0').join(' ' + sqlK('OR') + ' ') + ';' }); }
+    }
+    return out;
+  }
   async function runChecks() {
-    $('chk-run').disabled = true; chkDone = 0; setStatus('quality', 'run'); renderChecks();
-    for (let i = 0; i < CHECKS.length; i++) { await wait(450); chkDone = i + 1; renderChecks(); }
+    if (MODE === 'custom' && !FILES.some(f => f.loaded)) { location.hash = 'ingest'; return; }
+    $('chk-run').disabled = true; chkDone = 0; chkOpen = -1; setStatus('quality', 'run');
+    if (MODE === 'custom') { CHECKS = []; renderChecks(); CHECKS = await buildChecks(); }
+    renderChecks();
+    for (let i = 0; i < CHECKS.length; i++) { await wait(MODE === 'custom' ? 120 : 450); chkDone = i + 1; renderChecks(); }
     $('chk-run').disabled = false; setStatus('quality', 'ok');
   }
   $('chk-run').onclick = runChecks;
-  renderChecks();
+
+  // ---------- Field mapping (uploaded data) ----------
+  const FIELDS = [
+    { k: 'date', label: 'Order date', req: true, exact: ['order_purchase_timestamp', 'order_date', 'orderdate', 'invoicedate', 'invoice_date', 'purchase_date', 'transaction_date', 'sale_date', 'date'],
+      re: [/purchase.*(date|time)/, /order.?(date|time)/, /invoice.?date/, /(transaction|sale|txn).?date/, /created/, /date/, /time/], not: /(deliver|estimat|approv|ship|limit|review|answer|carrier|birth|updat)/ },
+    { k: 'amount', label: 'Amount', req: true, num: true, exact: ['revenue', 'sales', 'amount', 'total', 'price', 'line_total', 'order_total', 'subtotal', 'sale_amount', 'payment_value', 'unit_price', 'unitprice', 'value'],
+      re: [/(revenue|sales|amount|total)/, /price/, /value/], not: /(freight|tax|discount|shipping|qty|quantity|zip|lat|lng|score|_id$|^id$)/ },
+    { k: 'customer', label: 'Customer', req: true, exact: ['customer_unique_id', 'customer_id', 'customerid', 'client_id', 'user_id', 'member_id', 'buyer_id', 'email', 'customer'],
+      re: [/customer.*id/, /(client|user|member|buyer).?id/, /customer/], not: /(name|city|state|zip|country)/ },
+    { k: 'order', label: 'Order ID', exact: ['order_id', 'orderid', 'invoice', 'invoiceno', 'invoice_no', 'invoice_id', 'transaction_id', 'receipt_id', 'order_no', 'order_number'],
+      re: [/order.?(id|no|number)/, /invoice/, /(transaction|txn|receipt).?(id|no)/] },
+    { k: 'status', label: 'Status', exact: ['order_status', 'status'], re: [/status/] },
+    { k: 'category', label: 'Category', exact: ['product_category_name_english', 'category', 'product_category', 'category_name', 'product_category_name', 'segment', 'department', 'product_line'], re: [/category/, /(segment|department)/] },
+    { k: 'region', label: 'Region', exact: ['customer_state', 'state', 'region', 'province', 'country', 'customer_city', 'city'], re: [/(state|region|province)/, /country/, /city/], not: /(seller|geolocation|status)/ }
+  ];
+  let MAP = {}, DATE_ORDER = 'auto', STATUS_KEEP = null;
+  const tablesLoaded = () => FILES.filter(f => f.loaded && !f.example);
+  const colType = (t, c) => { const f = FILES.find(x => x.table === t); const col = f && f.cols.find(x => x.name === c); return col ? col.type : ''; };
+  function autoMap() {
+    const tabs = tablesLoaded(); MAP = {};
+    FIELDS.forEach(fd => {
+      let best = null;
+      tabs.forEach(f => f.cols.forEach(c => {
+        const n = c.name.toLowerCase().replace(/\s+/g, '_');
+        if (fd.not && fd.not.test(n)) return;
+        if (fd.num && !(c.type === 'integer' || c.type === 'decimal')) return;
+        if (fd.k === 'date' && c.type !== 'date') return;
+        let sc = fd.exact.indexOf(n);
+        if (sc < 0) { const r = fd.re.findIndex(x => x.test(n)); if (r < 0) return; sc = 100 + r; }
+        if (!best || sc < best.sc || (sc === best.sc && f.rows > best.rows)) best = { sc, t: f.table, c: c.name, rows: f.rows };
+      }));
+      MAP[fd.k] = best ? { t: best.t, c: best.c } : null;
+    });
+    STATUS_KEEP = null;
+  }
+  function renderMapping() {
+    const tabs = tablesLoaded();
+    $('map-card').hidden = MODE !== 'custom';
+    if (MODE !== 'custom') return;
+    const opts = (fd) => (fd.req ? '' : '<option value="">None</option>') + tabs.map(f => '<optgroup label="' + esc(f.table) + '">' +
+      f.cols.map(c => { const v = f.table + '\u0001' + c.name, sel = MAP[fd.k] && MAP[fd.k].t === f.table && MAP[fd.k].c === c.name;
+        return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</optgroup>').join('');
+    $('map-grid').innerHTML = FIELDS.map(fd => '<label class="map-field"><span class="meta">' + fd.label + (fd.req ? ' <b>*</b>' : '') + '</span><select class="ctl" data-k="' + fd.k + '">' +
+      (fd.req && !MAP[fd.k] ? '<option value="" selected>Choose a column</option>' : '') + opts(fd) + '</select></label>').join('') +
+      '<label class="map-field"><span class="meta">Date format</span><select class="ctl" id="map-datefmt"><option value="auto">Auto</option><option value="dmy">Day first</option><option value="mdy">Month first</option></select></label>' +
+      '<label class="map-field"><span class="meta">Currency</span><select class="ctl" id="map-cur">' + ['', '$', '€', '£', '₹', 'R$', '¥'].map(c => '<option value="' + c + '"' + (c === CUR ? ' selected' : '') + '>' + (c || 'None') + '</option>').join('') + '</select></label>';
+    $('map-datefmt').value = DATE_ORDER;
+    $('map-grid').querySelectorAll('select[data-k]').forEach(sel => sel.onchange = () => {
+      const [t, c] = sel.value ? sel.value.split('\u0001') : [];
+      MAP[sel.dataset.k] = sel.value ? { t, c } : null;
+      if (sel.dataset.k === 'status') STATUS_KEEP = null;
+      renderMapping(); mappingChanged();
+    });
+    $('map-datefmt').onchange = e => { DATE_ORDER = e.target.value; mappingChanged(); };
+    $('map-cur').onchange = e => { CUR = e.target.value; refreshMoney(); };
+    renderStatusValues();
+    const err = mappingError();
+    $('map-status').className = 'badge ' + (err ? 'warn' : 'ok'); $('map-status').innerText = err || 'Ready';
+    $('dag-run').disabled = !!err;
+  }
+  function renderStatusValues() {
+    const box = $('status-vals'), m = MAP.status;
+    if (!m) { box.hidden = true; return; }
+    const f = FILES.find(x => x.table === m.t), j = f.header.indexOf(m.c), counts = new Map();
+    for (const r of f.data) { const v = String(r[j] == null ? '' : r[j]).trim() || '(empty)'; counts.set(v, (counts.get(v) || 0) + 1); }
+    const vals = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15);
+    if (!STATUS_KEEP) STATUS_KEEP = new Set(vals.map(v => v[0]));
+    box.hidden = false;
+    box.innerHTML = '<span class="meta" style="display:block;margin-bottom:6px">Include ' + esc(m.c) + '</span>' + vals.map(([v, n]) =>
+      '<label class="status-chip"><input type="checkbox" value="' + esc(v) + '"' + (STATUS_KEEP.has(v) ? ' checked' : '') + '>' + esc(v) + ' <span class="meta">' + fmt(n) + '</span></label>').join('');
+    box.querySelectorAll('input').forEach(i => i.onchange = () => { i.checked ? STATUS_KEEP.add(i.value) : STATUS_KEEP.delete(i.value); mappingChanged(); });
+  }
+  function mappingError() {
+    if (!tablesLoaded().length) return 'Upload files first';
+    for (const fd of FIELDS) if (fd.req && !MAP[fd.k]) return 'Choose ' + fd.label.toLowerCase();
+    try { planJoins(); } catch (e) { return e.message; }
+    return '';
+  }
+  function mappingChanged() {
+    if (C.built) { C.built = false; markStale(); }
+    const err = mappingError();
+    $('map-status').className = 'badge ' + (err ? 'warn' : 'ok'); $('map-status').innerText = err || 'Ready';
+    $('dag-run').disabled = !!err;
+  }
+  // Tables are linked through columns that share a name, the way a dbt model joins on keys.
+  function planJoins() {
+    const fact = MAP.amount.t, tabs = tablesLoaded(), byT = Object.fromEntries(tabs.map(f => [f.table, f]));
+    const need = [...new Set(FIELDS.map(fd => MAP[fd.k] && MAP[fd.k].t).filter(t => t && t !== fact))];
+    const prev = { [fact]: null }, queue = [fact];
+    while (queue.length) {
+      const a = queue.shift(), fa = byT[a];
+      const edges = [];
+      tabs.forEach(fb => { if (prev[fb.table] !== undefined) return; fa.header.filter(h => fb.header.includes(h)).sort((x, y) => (/id$/i.test(y) ? 1 : 0) - (/id$/i.test(x) ? 1 : 0)).slice(0, 1).forEach(col => edges.push({ to: fb.table, col })); });
+      edges.forEach(e => { prev[e.to] = { from: a, col: e.col }; queue.push(e.to); });
+    }
+    const steps = [], added = new Set([fact]);
+    need.forEach(t => {
+      if (prev[t] === undefined) throw new Error('No shared column links ' + t + ' to ' + fact);
+      const chain = []; let x = t; while (x !== fact) { chain.unshift({ to: x, from: prev[x].from, col: prev[x].col }); x = prev[x].from; }
+      chain.forEach(s => { if (!added.has(s.to)) { added.add(s.to); steps.push(s); } });
+    });
+    return { fact, steps };
+  }
 
   // ---------- Transformation ----------
-  const MODELS = ['stg_customers', 'stg_order_items', 'stg_orders', 'stg_products', 'stg_reviews', 'fact_orders', 'mart_customer_rfm', 'mart_customer_segments', 'mart_daily_sales', 'mart_product_performance', 'mart_sales_summary'];
-  const TESTS = ['unique_stg_orders_order_id', 'not_null_stg_orders_order_id', 'not_null_stg_orders_customer_id', 'unique_stg_customers_customer_id', 'not_null_stg_customers_customer_id',
+  const EX_MODELS = ['stg_customers', 'stg_order_items', 'stg_orders', 'stg_products', 'stg_reviews', 'fact_orders', 'mart_customer_rfm', 'mart_customer_segments', 'mart_daily_sales', 'mart_product_performance', 'mart_sales_summary'];
+  const EX_TESTS = ['unique_stg_orders_order_id', 'not_null_stg_orders_order_id', 'not_null_stg_orders_customer_id', 'unique_stg_customers_customer_id', 'not_null_stg_customers_customer_id',
     'unique_stg_products_product_id', 'not_null_stg_products_product_id', 'not_null_stg_order_items_order_id', 'not_null_stg_order_items_product_id', 'unique_stg_reviews_review_id',
     'not_null_stg_reviews_review_id', 'not_null_stg_reviews_order_id', 'unique_fact_orders_order_id', 'not_null_fact_orders_order_id', 'not_null_mart_product_performance_product_id',
-    'not_null_mart_product_performance_total_revenue', 'not_null_mart_daily_sales_orders', 'not_null_mart_daily_sales_revenue'];
+    'not_null_mart_product_performance_total_revenue', 'not_null_mart_daily_sales_orders', 'not_null_mart_daily_sales_revenue'].map(name => ({ name, pass: true, detail: '' }));
+  let TESTS = EX_TESTS;
   function renderTests(n) {
-    $('tests-body').innerHTML = TESTS.map((t, i) => '<tr><td class="id">' + t + '</td><td class="num">' + (i < n ? '<span class="badge ok">PASS</span>' : '<span class="badge">–</span>') + '</td></tr>').join('');
-    $('tests-badge').className = 'badge' + (n === TESTS.length ? ' ok' : '');
-    $('tests-badge').innerText = n ? n + ' / ' + TESTS.length + ' passed' : 'not run';
+    $('tests-body').innerHTML = TESTS.length ? TESTS.map((t, i) => '<tr><td class="id">' + esc(t.name) + (i < n && t.detail ? ' <span class="meta">' + esc(t.detail) + '</span>' : '') + '</td><td class="num">' +
+      (i < n ? (t.pass ? '<span class="badge ok">PASS</span>' : '<span class="badge warn">WARN</span>') : '<span class="badge">–</span>') + '</td></tr>').join('') : '<tr><td class="muted">Not run</td></tr>';
+    const passed = TESTS.slice(0, n).filter(t => t.pass).length;
+    $('tests-badge').className = 'badge' + (n && n === TESTS.length ? (passed === n ? ' ok' : ' warn') : '');
+    $('tests-badge').innerText = n ? passed + ' / ' + TESTS.length + ' passed' : 'not run';
   }
-  renderTests(0);
-  function task(k, st) { const n = $('dag').querySelector('[data-task="' + k + '"]'); n.dataset.state = st; const b = n.querySelector('.badge'); b.innerText = st; b.className = 'badge' + (st === 'success' ? ' ok' : st === 'running' ? ' run' : ''); }
+  function task(k, st) { const n = $('dag').querySelector('[data-task="' + k + '"]'); n.dataset.state = st; const b = n.querySelector('.badge'); b.innerText = st; b.className = 'badge' + (st === 'success' ? ' ok' : st === 'running' ? ' run' : st === 'failed' ? ' err' : ''); }
   async function runDag() {
+    if (MODE === 'custom') return runCustomPipeline();
     $('dag-run').disabled = true; setStatus('clean', 'run'); renderTests(0);
     ['ingest', 'run', 'test'].forEach(k => task(k, 'queued'));
     $('dag-term').innerHTML = '';
     task('ingest', 'running'); log('dag-term', '<span class="dim">[data_ingestion] python /opt/airflow/src/ingestion.py</span>');
-    for (const [n, r] of RAW) { await wait(70); log('dag-term', n + ' loaded: ' + r + ' rows'); }
+    for (const [n, r] of EXAMPLE_RAW) { await wait(70); log('dag-term', n + ' loaded: ' + r + ' rows'); }
     task('ingest', 'success');
     task('run', 'running'); log('dag-term', '<span class="dim">[dbt_transform] dbt run</span>');
-    for (let i = 0; i < MODELS.length; i++) { await wait(160); log('dag-term', (i + 1) + ' of 11 OK ' + MODELS[i]); }
+    for (let i = 0; i < EX_MODELS.length; i++) { await wait(160); log('dag-term', (i + 1) + ' of 11 OK ' + EX_MODELS[i]); }
     task('run', 'success');
     task('test', 'running'); log('dag-term', '<span class="dim">[dbt_test] dbt test</span>');
-    for (let i = 0; i < TESTS.length; i++) { await wait(90); log('dag-term', 'PASS ' + TESTS[i]); renderTests(i + 1); }
+    for (let i = 0; i < TESTS.length; i++) { await wait(90); log('dag-term', 'PASS ' + TESTS[i].name); renderTests(i + 1); }
     log('dag-term', '<span class="ok">Done · PASS=18 WARN=0 ERROR=0</span>');
     task('test', 'success');
     $('dag-status').innerText = '@daily · last run: success, just now';
@@ -1012,45 +1348,314 @@
   }
   $('dag-run').onclick = runDag;
 
-  const BA = {
-    raw: { html: '<table><thead><tr><th>order_id</th><th>customer_id</th><th>order_status</th><th>order_purchase_timestamp</th><th>order_approved_at</th><th>order_delivered_carrier_date</th><th>order_delivered_customer_date</th><th>order_estimated_delivery_date</th></tr></thead><tbody><tr><td class="id">e481f51cbdc54678b7cc49136f2d6af7</td><td class="id bad">9ef432eb6251297304e76186b10a928d</td><td>delivered</td><td class="bad">\'2017-10-02 10:56:33\'</td><td>\'2017-10-02 11:07:15\'</td><td>\'2017-10-04 19:55:00\'</td><td class="bad">\'2017-10-10 21:25:13\'</td><td>\'2017-10-18 00:00:00\'</td></tr></tbody></table>',
-      note: 'olist_orders_dataset · 8 columns · dates stored as text · customer_id is per order, not per person' },
-    stg: { html: '<table><thead><tr><th>order_id</th><th>customer_id</th><th>order_status</th><th>purchase_date</th><th>delivery_date</th></tr></thead><tbody><tr><td class="id">e481f51cbdc54678b7cc49136f2d6af7</td><td class="id">9ef432eb6251297304e76186b10a928d</td><td>delivered</td><td class="fixed">2017-10-02 10:56:33</td><td class="fixed">2017-10-10 21:25:13</td></tr></tbody></table>',
-      note: 'stg_orders · 5 columns · clear names · timestamp types' },
-    mart: { html: '<table><thead><tr><th>customer_unique_id</th><th class="num">recency</th><th class="num">frequency</th><th class="num">monetary</th><th class="num">avg_order_value</th><th class="num">lifetime_days</th><th class="num">churn</th></tr></thead><tbody><tr><td class="id">cb4253d36367737b6baa4f8ca58fac62</td><td class="num fixed">29</td><td class="num fixed">2</td><td class="num fixed">116.90</td><td class="num">58.45</td><td class="num">323</td><td class="num">0</td></tr><tr><td class="id">52ee6d0a8f1b786485a5bd366aa2137c</td><td class="num fixed">267</td><td class="num fixed">1</td><td class="num fixed">89.90</td><td class="num">89.90</td><td class="num">0</td><td class="num">1</td></tr></tbody></table>',
-      note: 'mart_customer_rfm · one row per person · 75,387 rows · ready for the model' }
+  const EX_BA = {
+    raw: '<table><thead><tr><th>order_id</th><th>customer_id</th><th>order_status</th><th>order_purchase_timestamp</th><th>order_approved_at</th><th>order_delivered_carrier_date</th><th>order_delivered_customer_date</th><th>order_estimated_delivery_date</th></tr></thead><tbody><tr><td class="id">e481f51cbdc54678b7cc49136f2d6af7</td><td class="id bad">9ef432eb6251297304e76186b10a928d</td><td>delivered</td><td class="bad">\'2017-10-02 10:56:33\'</td><td>\'2017-10-02 11:07:15\'</td><td>\'2017-10-04 19:55:00\'</td><td class="bad">\'2017-10-10 21:25:13\'</td><td>\'2017-10-18 00:00:00\'</td></tr></tbody></table>',
+    stg: '<table><thead><tr><th>order_id</th><th>customer_id</th><th>order_status</th><th>purchase_date</th><th>delivery_date</th></tr></thead><tbody><tr><td class="id">e481f51cbdc54678b7cc49136f2d6af7</td><td class="id">9ef432eb6251297304e76186b10a928d</td><td>delivered</td><td class="fixed">2017-10-02 10:56:33</td><td class="fixed">2017-10-10 21:25:13</td></tr></tbody></table>',
+    mart: '<table><thead><tr><th>customer_unique_id</th><th class="num">recency</th><th class="num">frequency</th><th class="num">monetary</th><th class="num">avg_order_value</th><th class="num">lifetime_days</th><th class="num">churn</th></tr></thead><tbody><tr><td class="id">cb4253d36367737b6baa4f8ca58fac62</td><td class="num fixed">29</td><td class="num fixed">2</td><td class="num fixed">116.90</td><td class="num">58.45</td><td class="num">323</td><td class="num">0</td></tr><tr><td class="id">52ee6d0a8f1b786485a5bd366aa2137c</td><td class="num fixed">267</td><td class="num fixed">1</td><td class="num fixed">89.90</td><td class="num">89.90</td><td class="num">0</td><td class="num">1</td></tr></tbody></table>'
   };
-  function showBA(v) { $('ba-view').innerHTML = BA[v].html; }
-  seg('ba-seg', showBA); showBA('raw');
-
-  const RULES = [
-    ['<span class="c">-- stg_orders.sql</span>\norder_purchase_timestamp::<span class="k">timestamp</span> <span class="k">as</span> purchase_date,\norder_delivered_customer_date::<span class="k">timestamp</span> <span class="k">as</span> delivery_date', 'Text dates become real timestamps so recency can be calculated.'],
-    ['<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">left join</span> stg_customers c <span class="k">on</span> o.customer_id = c.customer_id\n<span class="k">group by</span> c.customer_unique_id', '99,441 customer IDs collapse to 96,096 real people.'],
-    ['<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">where</span> o.order_status = <span class="s">\'delivered\'</span>\n  <span class="k">and</span> o.purchase_date &lt; <span class="s">\'2018-06-01\'</span>', 'Only delivered orders before the snapshot date count.'],
-    ['<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">count</span>(<span class="k">distinct</span> order_id)  <span class="k">as</span> frequency,\n<span class="k">sum</span>(order_value)          <span class="k">as</span> monetary,\n<span class="s">\'2018-06-01\'</span> - last_purchase <span class="k">as</span> recency,\n<span class="k">case when</span> recency &gt; 120 <span class="k">then</span> 1 <span class="k">else</span> 0 <span class="k">end as</span> churn', 'One row per person with RFM and the churn label.']
+  const EX_RULES = [
+    ['Fix formats', '<span class="c">-- stg_orders.sql</span>\norder_purchase_timestamp::<span class="k">timestamp</span> <span class="k">as</span> purchase_date,\norder_delivered_customer_date::<span class="k">timestamp</span> <span class="k">as</span> delivery_date'],
+    ['One person, one ID', '<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">left join</span> stg_customers c <span class="k">on</span> o.customer_id = c.customer_id\n<span class="k">group by</span> c.customer_unique_id'],
+    ['Keep valid orders', '<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">where</span> o.order_status = <span class="s">\'delivered\'</span>\n  <span class="k">and</span> o.purchase_date &lt; <span class="s">\'2018-06-01\'</span>'],
+    ['Aggregate per person', '<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">count</span>(<span class="k">distinct</span> order_id)  <span class="k">as</span> frequency,\n<span class="k">sum</span>(order_value)          <span class="k">as</span> monetary,\n<span class="s">\'2018-06-01\'</span> - last_purchase <span class="k">as</span> recency,\n<span class="k">case when</span> recency &gt; 120 <span class="k">then</span> 1 <span class="k">else</span> 0 <span class="k">end as</span> churn']
   ];
-  function showRule(i) { $('rule-code').innerHTML = RULES[i][0]; }
-  $('rule-sel').onchange = e => showRule(Number(e.target.value)); showRule(0);
+  let BA = EX_BA, RULES = EX_RULES, baView = 'raw';
+  function showBA(v) { baView = v; $('ba-view').innerHTML = BA ? BA[v] : '<p class="muted">Not run</p>'; }
+  seg('ba-seg', showBA);
+  function renderRules() {
+    $('rule-sel').innerHTML = RULES.map((r, i) => '<option value="' + i + '">' + esc(r[0]) + '</option>').join('');
+    showRule(0);
+  }
+  function showRule(i) { $('rule-code').innerHTML = RULES.length ? RULES[i][1] : '<span class="c">-- run the pipeline</span>'; }
+  $('rule-sel').onchange = e => showRule(Number(e.target.value));
 
-  // ---------- Training (results precomputed from the real training data) ----------
+  // Uploaded data: join, clean, aggregate and test, for real
+  const C = { built: false, mart: null };
+  const tbl = (head, rows) => '<table><thead><tr>' + head.map(h => '<th' + (h[1] ? ' class="num"' : '') + '>' + esc(h[0]) + '</th>').join('') + '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + r.map((c, i) => '<td class="' + (head[i][1] ? 'num ' : '') + (c && c.cls ? c.cls : '') + '">' + esc(c && c.v !== undefined ? c.v : c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+  async function buildMart(say) {
+    const plan = planJoins(), byT = Object.fromEntries(tablesLoaded().map(f => [f.table, f]));
+    const fact = byT[plan.fact], idx = {};
+    for (const s of plan.steps) {
+      const f = byT[s.to], j = f.header.indexOf(s.col), m = new Map();
+      for (let k = 0; k < f.data.length; k++) { const v = f.data[k][j]; if (v !== '' && v != null && !m.has(v)) m.set(v, k); }
+      idx[s.to] = { map: m, fromCol: byT[s.from].header.indexOf(s.col) };
+      say('join ' + esc(s.from) + ' → ' + esc(s.to) + ' on ' + esc(s.col) + ' (' + fmt(m.size) + ' keys)');
+      await tick();
+    }
+    const fieldCol = {}; FIELDS.forEach(fd => { if (MAP[fd.k]) fieldCol[fd.k] = { t: MAP[fd.k].t, j: byT[MAP[fd.k].t].header.indexOf(MAP[fd.k].c) }; });
+    const dateVals = []; { const fc = fieldCol.date, f = byT[fc.t]; for (let k = 0; k < Math.min(5000, f.data.length); k++) dateVals.push(f.data[k][fc.j]); }
+    const order = DATE_ORDER === 'auto' ? detectOrder(dateVals) : DATE_ORDER;
+    const stats = { rows: fact.data.length, badDate: 0, badAmt: 0, noCust: 0, filtered: 0, neg: 0, conflict: 0, unmatched: 0 };
+    const orders = new Map(), lines = { day: [], amt: [], cat: [] }, catIds = new Map(), catNames = [];
+    const rowOf = {}, raw = [];
+    for (let k = 0; k < fact.data.length; k++) {
+      rowOf[plan.fact] = fact.data[k];
+      for (const s of plan.steps) {
+        const from = rowOf[s.from]; const hit = from ? idx[s.to].map.get(from[idx[s.to].fromCol]) : undefined;
+        rowOf[s.to] = hit === undefined ? null : byT[s.to].data[hit];
+      }
+      const get = key => { const fc = fieldCol[key]; if (!fc) return ''; const r = rowOf[fc.t]; return r ? String(r[fc.j] == null ? '' : r[fc.j]).trim() : null; };
+      const dRaw = get('date'), aRaw = get('amount'), cust = get('customer');
+      if (raw.length < 3) raw.push(FIELDS.filter(fd => fieldCol[fd.k]).map(fd => get(fd.k) || ''));
+      if (dRaw === null || cust === null) { stats.unmatched++; continue; }
+      if (MAP.status) { const st = get('status') || '(empty)'; if (STATUS_KEEP && !STATUS_KEEP.has(st)) { stats.filtered++; continue; } }
+      const day = parseDay(dRaw, order); if (isNaN(day)) { stats.badDate++; continue; }
+      const amt = toNum(aRaw); if (isNaN(amt)) { stats.badAmt++; continue; }
+      if (!cust) { stats.noCust++; continue; }
+      if (amt < 0) stats.neg++;
+      const oid = MAP.order ? (get('order') || 'row' + k) : 'row' + k;
+      let o = orders.get(oid);
+      if (!o) { o = { d: day, c: cust, a: 0, r: MAP.region ? (get('region') || '(Blank)') : '', st: MAP.status ? get('status') : '' }; orders.set(oid, o); }
+      else { if (o.c !== cust) stats.conflict++; if (day < o.d) o.d = day; }
+      o.a += amt;
+      if (MAP.category) {
+        const cn = get('category') || '(Blank)'; let id = catIds.get(cn);
+        if (id === undefined) { id = catNames.length; catIds.set(cn, id); catNames.push(cn); }
+        lines.cat.push(id); lines.day.push(day); lines.amt.push(amt);
+      }
+      if (k % 40000 === 0) { await tick(); }
+    }
+    say('clean: ' + fmt(stats.rows) + ' rows read · ' + fmt(stats.badDate) + ' bad dates · ' + fmt(stats.badAmt) + ' bad amounts · ' + fmt(stats.noCust) + ' missing customer' + (MAP.status ? ' · ' + fmt(stats.filtered) + ' filtered by status' : '') + (stats.unmatched ? ' · ' + fmt(stats.unmatched) + ' unmatched joins' : ''));
+    if (!orders.size) throw new Error('No valid orders after cleaning. Check the mapping and date format.');
+    say('aggregate: ' + fmt(orders.size) + ' orders');
+    await tick();
+    // Daily sales
+    let minD = Infinity, maxD = -Infinity; for (const o of orders.values()) { if (o.d < minD) minD = o.d; if (o.d > maxD) maxD = o.d; }
+    const N = maxD - minD + 1;
+    if (N > 40000) throw new Error('Date range is over 100 years. Check the date column.');
+    const revenue = new Array(N).fill(0), ordersN = new Array(N).fill(0), regTot = new Map();
+    for (const o of orders.values()) { const i = o.d - minD; revenue[i] += o.a; ordersN[i]++; if (MAP.region) regTot.set(o.r, (regTot.get(o.r) || 0) + o.a); }
+    const topReg = [...regTot.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(e => e[0]), states = {};
+    topReg.forEach(r => { states[r] = { r: new Array(N).fill(0), o: new Array(N).fill(0) }; });
+    if (MAP.region) for (const o of orders.values()) { const s = states[o.r]; if (s) { s.r[o.d - minD] += o.a; s.o[o.d - minD]++; } }
+    const d0 = new Date(minD * DAY), d1 = new Date(maxD * DAY), months = [];
+    for (let y = d0.getUTCFullYear(), m = d0.getUTCMonth(); y < d1.getUTCFullYear() || (y === d1.getUTCFullYear() && m <= d1.getUTCMonth()); m === 11 ? (y++, m = 0) : m++) months.push(y + '-' + String(m + 1).padStart(2, '0'));
+    const mIdx = day => { const d = new Date(day * DAY); return (d.getUTCFullYear() - d0.getUTCFullYear()) * 12 + d.getUTCMonth() - d0.getUTCMonth(); };
+    const cat_month = {};
+    if (MAP.category) {
+      const tot = new Array(catNames.length).fill(0); lines.cat.forEach((c, i) => { tot[c] += lines.amt[i]; });
+      const keep = new Set(tot.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]).slice(0, 40).map(x => x[1]));
+      const blank = catIds.get('(Blank)'); if (blank !== undefined) keep.add(blank);
+      keep.forEach(i => { cat_month[catNames[i]] = new Array(months.length).fill(0); });
+      lines.cat.forEach((c, i) => { if (keep.has(c)) cat_month[catNames[c]][mIdx(lines.day[i])] += lines.amt[i]; });
+      say('categories: ' + fmt(catNames.length));
+    }
+    const sales = { start: isoDay(minD), dates_n: N, revenue, orders: ordersN, states, months, cat_month };
+    // Customer mart: recency, frequency, monetary
+    const cust = new Map();
+    for (const o of orders.values()) {
+      let c = cust.get(o.c);
+      if (!c) { c = { first: o.d, last: o.d, f: 0, m: 0 }; cust.set(o.c, c); }
+      c.f++; c.m += o.a; if (o.d < c.first) c.first = o.d; if (o.d > c.last) c.last = o.d;
+    }
+    const n = cust.size, snap = maxD + 1;
+    const mart = { n, ids: new Array(n), recency: new Float64Array(n), frequency: new Float64Array(n), monetary: new Float64Array(n), avg_order_value: new Float64Array(n), customer_lifetime_days: new Float64Array(n) };
+    let i = 0; for (const [id, c] of cust) {
+      mart.ids[i] = id; mart.recency[i] = snap - c.last; mart.frequency[i] = c.f; mart.monetary[i] = c.m; mart.avg_order_value[i] = c.m / c.f; mart.customer_lifetime_days[i] = c.last - c.first; i++;
+    }
+    say('mart_customer_rfm: ' + fmt(n) + ' customers · snapshot ' + isoDay(snap));
+    // Tests on the result
+    const revSum = revenue.reduce((a, b) => a + b, 0), ordSum = [...orders.values()].reduce((a, o) => a + o.a, 0);
+    const tests = [
+      { name: 'dates_parse', pass: !stats.badDate, detail: fmt(stats.badDate) + ' rows dropped' },
+      { name: 'amounts_numeric', pass: !stats.badAmt, detail: fmt(stats.badAmt) + ' rows dropped' },
+      { name: 'amounts_non_negative', pass: !stats.neg, detail: fmt(stats.neg) + ' negative rows' },
+      { name: 'customer_not_null', pass: !stats.noCust, detail: fmt(stats.noCust) + ' rows dropped' },
+      { name: 'joins_matched', pass: !stats.unmatched, detail: fmt(stats.unmatched) + ' rows without a match' },
+      { name: 'one_customer_per_order', pass: !stats.conflict, detail: fmt(stats.conflict) + ' conflicts' },
+      { name: 'revenue_reconciles', pass: Math.abs(revSum - ordSum) < 0.01 * Math.max(1, Math.abs(ordSum)), detail: money(revSum) },
+      { name: 'unique_customer_in_mart', pass: mart.ids.length === new Set(mart.ids).size, detail: fmt(n) + ' rows' }
+    ];
+    // Before and after views
+    const used = FIELDS.filter(fd => fieldCol[fd.k]);
+    const firstOrders = [...orders.entries()].slice(0, 3);
+    const ba = {
+      raw: tbl(used.map(fd => [MAP[fd.k].t + '.' + MAP[fd.k].c]), raw.map(r => r.map((v, j) => ({ v, cls: used[j].k === 'date' ? 'bad' : '' })))),
+      stg: tbl([['order'], ['customer'], ['order_date'], ['amount', 1]].concat(MAP.status ? [['status']] : []).concat(MAP.region ? [['region']] : []),
+        firstOrders.map(([oid, o]) => [MAP.order ? oid : '(row)', o.c, { v: isoDay(o.d), cls: 'fixed' }, { v: o.a.toFixed(2), cls: 'fixed' }].concat(MAP.status ? [o.st] : []).concat(MAP.region ? [o.r] : []))),
+      mart: tbl([['customer'], ['recency', 1], ['frequency', 1], ['monetary', 1], ['avg_order_value', 1], ['lifetime_days', 1], ['churn (120d)', 1]],
+        [0, 1, 2].filter(x => x < n).map(x => [mart.ids[x], { v: mart.recency[x], cls: 'fixed' }, { v: mart.frequency[x], cls: 'fixed' }, { v: mart.monetary[x].toFixed(2), cls: 'fixed' }, mart.avg_order_value[x].toFixed(2), mart.customer_lifetime_days[x], mart.recency[x] > 120 ? 1 : 0]))
+    };
+    const q = s => '<span class="s">\'' + esc(s) + '\'</span>';
+    const rules = [
+      ['Link tables', '<span class="c">-- join on shared columns</span>\n' + (plan.steps.length ? plan.steps.map(s => '<span class="k">left join</span> ' + esc(s.to) + ' <span class="k">using</span> (' + esc(s.col) + ')').join('\n') : '<span class="c">-- one table, no joins</span>')],
+      ['Clean values', '<span class="c">-- ' + fmt(stats.badDate + stats.badAmt + stats.noCust) + ' rows dropped</span>\n' + esc(MAP.date.c) + '::<span class="k">date</span>   <span class="c">-- ' + (order === 'dmy' ? 'day first' : 'month first') + '</span>\n' + esc(MAP.amount.c) + '::<span class="k">numeric</span>\n<span class="k">where</span> ' + esc(MAP.customer.c) + ' <span class="k">is not null</span>'],
+      ['Filter', MAP.status ? '<span class="k">where</span> ' + esc(MAP.status.c) + ' <span class="k">in</span> (' + [...(STATUS_KEEP || [])].map(q).join(', ') + ')' : '<span class="c">-- no status filter</span>'],
+      ['Aggregate per customer', '<span class="k">group by</span> ' + esc(MAP.customer.c) + '\n<span class="k">count</span>(<span class="k">distinct</span> ' + (MAP.order ? esc(MAP.order.c) : 'row') + ') <span class="k">as</span> frequency,\n<span class="k">sum</span>(' + esc(MAP.amount.c) + ')   <span class="k">as</span> monetary,\n' + q(isoDay(snap)) + ' - <span class="k">max</span>(' + esc(MAP.date.c) + ') <span class="k">as</span> recency']
+    ];
+    return { sales, mart, tests, ba, rules, stats, orders: orders.size, snap, plan };
+  }
+  function makeInsights(mart) {
+    const n = mart.n, windows = []; for (let w = 30; w <= 360; w += 15) windows.push(w);
+    const churned_at = windows.map(w => { let c = 0; for (let i = 0; i < n; i++) if (mart.recency[i] > w) c++; return c; });
+    const hist = new Array(21).fill(0), freq = [0, 0, 0, 0];
+    for (let i = 0; i < n; i++) { hist[Math.min(20, Math.floor(mart.recency[i] / 30))]++; freq[Math.min(3, mart.frequency[i] - 1)]++; }
+    const rand = mulberry(11), pick = new Set(); while (pick.size < Math.min(12, n)) pick.add(Math.floor(rand() * n));
+    const row = i => ({ customer_unique_id: String(mart.ids[i]), recency: mart.recency[i], frequency: mart.frequency[i], monetary: mart.monetary[i], avg_order_value: mart.avg_order_value[i], customer_lifetime_days: mart.customer_lifetime_days[i] });
+    return { n, windows, churned_at, freq, recency_hist: hist, sample: [...pick].map(row), search: q => { const out = []; for (let i = 0; i < n && out.length < 12; i++) if (String(mart.ids[i]).toLowerCase().includes(q)) out.push(row(i)); return out; } };
+  }
+  const quant = (arr, q) => { const a = Array.from(arr).sort((x, y) => x - y); return a.length ? a[Math.min(a.length - 1, Math.floor(q * a.length))] : 0; };
+  async function runCustomPipeline() {
+    const err = mappingError(); if (err) { renderMapping(); return; }
+    $('dag-run').disabled = true; setStatus('clean', 'run'); TESTS = []; renderTests(0);
+    ['ingest', 'run', 'test'].forEach(k => task(k, 'queued'));
+    $('dag-term').innerHTML = '';
+    const say = h => log('dag-term', h);
+    task('ingest', 'running'); say('<span class="dim">[data_ingestion]</span>');
+    for (const f of tablesLoaded()) { await wait(60); say(esc(f.table) + ' loaded: ' + f.rows + ' rows'); }
+    task('ingest', 'success');
+    task('run', 'running'); say('<span class="dim">[transform] join · clean · aggregate</span>');
+    let res;
+    try { res = await buildMart(say); }
+    catch (e) { say('<span class="w">' + esc(e.message) + '</span>'); task('run', 'failed'); setStatus('clean', 'err'); $('dag-run').disabled = false; return; }
+    task('run', 'success');
+    task('test', 'running'); say('<span class="dim">[test]</span>');
+    TESTS = res.tests;
+    for (let i = 0; i < TESTS.length; i++) { await wait(90); say((TESTS[i].pass ? 'PASS ' : '<span class="w">WARN</span> ') + TESTS[i].name + ' · ' + esc(TESTS[i].detail)); renderTests(i + 1); }
+    say('<span class="ok">Done · PASS=' + TESTS.filter(t => t.pass).length + ' WARN=' + TESTS.filter(t => !t.pass).length + '</span>');
+    task('test', 'success');
+    $('dag-status').innerText = 'last run: success, just now';
+    BA = res.ba; RULES = res.rules; showBA(baView); renderRules();
+    C.built = true; C.mart = res.mart; C.res = res;
+    const M = res.mart, once = M.frequency.reduce((s, v) => s + (v === 1 ? 1 : 0), 0);
+    let churn120 = 0; for (let i = 0; i < M.n; i++) if (M.recency[i] > 120) churn120++;
+    const repeat = M.customer_lifetime_days.filter((v, i) => M.frequency[i] > 1);
+    CTX = {
+      riskDays: 120, vipMon: Math.max(1, quant(M.monetary, 0.95)),
+      lim: { rec: [1, Math.max(30, Math.ceil(quant(M.recency, 0.99)))], freq: [1, Math.max(5, Math.ceil(quant(M.frequency, 0.99)))], mon: [1, Math.max(10, Math.ceil(quant(M.monetary, 0.99)))] },
+      monStep: Math.max(1, Math.round(quant(M.monetary, 0.99) / 400)),
+      examples: [[Math.max(1, Math.round(quant(M.recency, 0.1))), 1, Math.round(quant(M.monetary, 0.5))], [Math.max(1, Math.round(quant(M.recency, 0.25))), 3, Math.round(quant(M.monetary, 0.8))],
+        [Math.max(1, Math.round(quant(M.recency, 0.1))), Math.max(5, Math.round(quant(M.frequency, 0.99))), Math.round(quant(M.monetary, 0.99))], [Math.round(quant(M.recency, 0.95)), 1, Math.round(quant(M.monetary, 0.25))]],
+      defaults: { rec: Math.round(quant(M.recency, 0.5)), freq: 1, mon: Math.round(quant(M.monetary, 0.5)) }, lifeRepeat: repeat.length ? quant(repeat, 0.5) : 0,
+      overview: [[fmt(res.orders), isoDay(res.snap - (res.sales.dates_n)) + ' – ' + isoDay(res.snap - 1)], [fmt(M.n), MAP.order ? fmt(res.orders) + ' orders' : ''], [pct(once / M.n), fmt(once) + ' of ' + fmt(M.n)], [pct(churn120 / M.n), 'no order in 120 days']],
+      customers: [fmt(M.n), ''], region: MAP.region ? MAP.region.c : '', regionPlural: MAP.region ? MAP.region.c.replace(/_/g, ' ') + 's' : ''
+    };
+    DATA = { thresholds: TH, grid: GRID, insights: makeInsights(M), models: null };
+    runs = []; activeRun = null;
+    say('<span class="dim">[train] random forest baseline</span>');
+    try { await trainCustom(DEFAULT_FEATS, '20'); say('<span class="ok">' + activeRun.name + ' · AUC ' + activeRun.m.auc_test.toFixed(3) + '</span>'); }
+    catch (e) { say('<span class="w">' + esc(e.message) + '</span>'); }
+    initDash(res.sales);
+    applyData();
+    setStatus('clean', 'ok');
+    ['insights', 'dashboard'].forEach(k => { STATUS[k] = 'ok'; });
+    if (activeRun) ['train', 'evaluate', 'predict'].forEach(k => { STATUS[k] = 'ok'; });
+    renderStatus(); renderOverview();
+    $('dag-run').disabled = false;
+  }
+
+  // ---------- Training ----------
   const FEATS = ['recency', 'frequency', 'monetary', 'avg_order_value', 'customer_lifetime_days'];
   const DEFAULT_FEATS = ['frequency', 'monetary', 'avg_order_value', 'customer_lifetime_days'];
   const metricsAt = cm => { const [tp, fn, fp, tn] = cm, n = tp + fn + fp + tn, prec = tp / Math.max(1, tp + fp), rec = tp / Math.max(1, tp + fn); return { n, acc: (tp + tn) / n, prec, rec }; };
   const thrIndex = t => DATA.thresholds.findIndex(x => Math.abs(x - t) < 1e-6);
-
   $('feat-list').innerHTML = FEATS.map(f => '<label class="check' + (f === 'recency' ? ' leak' : '') + '"><input type="checkbox" value="' + f + '"' + (DEFAULT_FEATS.includes(f) ? ' checked' : '') + '>' + f + (f === 'recency' ? '<span class="badge warn tag">defines label</span>' : '') + '</label>').join('');
   let split = '20';
-  const splitNote = () => { const te = Math.ceil(75387 * Number(split) / 100); $('split-note').innerText = fmt(75387 - te) + ' train · ' + fmt(te) + ' test'; };
-  seg('split-seg', v => { split = v; splitNote(); }); splitNote();
+  const splitNote = () => { if (!DATA || !DATA.insights) { $('split-note').innerText = ''; return; } const n = DATA.insights.n, te = Math.ceil(n * Number(split) / 100); $('split-note').innerText = fmt(n - te) + ' train · ' + fmt(te) + ' test'; };
+  seg('split-seg', v => { split = v; splitNote(); });
 
   function addRun(feats, sp, name) {
     const fs = FEATS.filter(f => feats.includes(f));
     const run = { id: runs.length + 1, name: name || 'random_forest_v' + (runs.length + 1), feats: fs, split: Number(sp), m: DATA.models[sp + ':' + fs.join(',')] };
     runs.unshift(run); selectRun(run);
   }
+  function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function aucOf(p, y, idx) {
+    const s = Array.from(idx).sort((a, b) => p[a] - p[b]); let rank = 0, pos = 0, sumR = 0;
+    for (let i = 0; i < s.length;) { let j = i; while (j + 1 < s.length && p[s[j + 1]] === p[s[i]]) j++; const r = (i + j) / 2 + 1; for (let k = i; k <= j; k++) if (y[s[k]]) { sumR += r; pos++; } i = j + 1; rank++; }
+    const neg = s.length - pos; return pos && neg ? (sumR - pos * (pos + 1) / 2) / (pos * neg) : 0.5;
+  }
+  function rocOf(p, y, idx) {
+    const s = Array.from(idx).sort((a, b) => p[b] - p[a]); let P = 0, N = 0; s.forEach(i => y[i] ? P++ : N++);
+    const pts = [[0, 0]]; let tp = 0, fp = 0;
+    for (let i = 0; i < s.length;) { let j = i; while (j < s.length && p[s[j]] === p[s[i]]) { y[s[j]] ? tp++ : fp++; j++; } pts.push([N ? fp / N : 0, P ? tp / P : 0]); i = j; }
+    return GRID.map(g => { let k = 1; while (k < pts.length - 1 && pts[k][0] < g) k++; const [x0, y0] = pts[k - 1], [x1, y1] = pts[k]; return +(x1 === x0 ? y1 : y0 + (y1 - y0) * (g - x0) / (x1 - x0)).toFixed(3); });
+  }
+  const cmsOf = (p, y, idx) => TH.map(t => { let tp = 0, fn = 0, fp = 0, tn = 0; for (const i of idx) { const hit = p[i] >= t; if (y[i]) hit ? tp++ : fn++; else hit ? fp++ : tn++; } return [tp, fn, fp, tn]; });
+  async function trainCustom(feats, sp) {
+    const M = C.mart, n = M.n, fs = FEATS.filter(f => feats.includes(f)), d = fs.length, window = Number($('win').value) || 120;
+    const y = new Uint8Array(n); for (let i = 0; i < n; i++) y[i] = M.recency[i] > window ? 1 : 0;
+    const perm = Array.from({ length: n }, (_, i) => i), rnd = mulberry(42);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; }
+    const nTest = Math.ceil(n * Number(sp) / 100), test = perm.slice(0, nTest), trainI = perm.slice(nTest);
+    let pos = 0; trainI.forEach(i => { pos += y[i]; });
+    const neg = trainI.length - pos;
+    if (!pos || !neg) throw new Error('The churn label has only one class at ' + window + ' days. Change the churn window on Customer insights.');
+    // Random forest on binned features: bootstrap rows, balanced classes, Gini splits
+    const TREES = 40, DEPTH = 32, MIN_LEAF = 1, NB = 256, mtry = Math.max(1, Math.round(Math.sqrt(d)));
+    const cols = fs.map(f => M[f]), edges = [], bins = [];
+    for (let j = 0; j < d; j++) {
+      const sample = []; for (let k = 0; k < trainI.length; k += Math.max(1, Math.floor(trainI.length / 60000))) sample.push(cols[j][trainI[k]]);
+      sample.sort((x, z) => x - z);
+      const e = []; for (let q = 1; q < NB; q++) { const v = sample[Math.floor(q * sample.length / NB)]; if (!e.length || v > e[e.length - 1]) e.push(v); }
+      edges.push(e);
+      const bj = new Uint8Array(n); for (let i = 0; i < n; i++) { let lo = 0, hi = e.length; const v = cols[j][i]; while (lo < hi) { const mid = (lo + hi) >> 1; if (e[mid] < v) lo = mid + 1; else hi = mid; } bj[i] = lo; }
+      bins.push(bj);
+    }
+    const wp = trainI.length / (2 * pos), wn = trainI.length / (2 * neg), gain = new Float64Array(d), forest = [];
+    const gini = (p, q) => { const t = p + q; return t ? 1 - (p / t) ** 2 - (q / t) ** 2 : 0; };
+    function grow(idx, depth) {
+      let wP = 0, wN = 0; for (const i of idx) y[i] ? wP += wp : wN += wn;
+      const leaf = { p: wP / (wP + wN || 1) };
+      if (depth >= DEPTH || idx.length < 2 * MIN_LEAF || !wP || !wN) return leaf;
+      const feats = []; while (feats.length < mtry) { const f = Math.floor(rnd() * d); if (!feats.includes(f)) feats.push(f); }
+      let best = null; const parent = gini(wP, wN) * (wP + wN);
+      for (const f of feats) {
+        const nb = edges[f].length + 1, col = cols[f];
+        if (idx.length < 4 * nb) {
+          // Small node: exact thresholds from the sorted values
+          const sorted = idx.slice().sort((a2, b2) => col[a2] - col[b2]);
+          let lp = 0, ln = 0;
+          for (let k = 0; k < sorted.length - 1; k++) {
+            const i = sorted[k]; if (y[i]) lp += wp; else ln += wn;
+            if (k + 1 < MIN_LEAF || sorted.length - k - 1 < MIN_LEAF || col[sorted[k + 1]] === col[i]) continue;
+            const g = parent - gini(lp, ln) * (lp + ln) - gini(wP - lp, wN - ln) * (wP - lp + wN - ln);
+            if (!best || g > best.g) best = { g, f, t: col[i] };
+          }
+          continue;
+        }
+        const hp = new Float64Array(nb), hn = new Float64Array(nb), hc = new Uint32Array(nb), bf = bins[f];
+        for (const i of idx) { const k = bf[i]; if (y[i]) hp[k] += wp; else hn[k] += wn; hc[k]++; }
+        let lp = 0, ln = 0, lc = 0;
+        for (let k = 0; k < nb - 1; k++) {
+          lp += hp[k]; ln += hn[k]; lc += hc[k];
+          if (lc < MIN_LEAF || idx.length - lc < MIN_LEAF) continue;
+          const g = parent - gini(lp, ln) * (lp + ln) - gini(wP - lp, wN - ln) * (wP - lp + wN - ln);
+          if (!best || g > best.g) best = { g, f, t: edges[f][k] };
+        }
+      }
+      if (!best || best.g <= 1e-12) return leaf;
+      gain[best.f] += best.g;
+      const L = [], Rr = [], cf = cols[best.f]; for (const i of idx) (cf[i] <= best.t ? L : Rr).push(i);
+      if (!L.length || !Rr.length) return leaf;
+      return { f: best.f, t: best.t, l: grow(L, depth + 1), r: grow(Rr, depth + 1) };
+    }
+    for (let tr = 0; tr < TREES; tr++) {
+      const boot = new Array(trainI.length); for (let k = 0; k < boot.length; k++) boot[k] = trainI[Math.floor(rnd() * trainI.length)];
+      forest.push(grow(boot, 0));
+      $('train-status').innerText = 'Training · ' + (tr + 1) + ' / ' + TREES + ' trees'; $('train-prog').style.width = ((tr + 1) / TREES * 100) + '%';
+      await tick();
+    }
+    const leafBin = (node, i) => { while (node.f !== undefined) node = cols[node.f][i] <= node.t ? node.l : node.r; return node.p; };
+    const leafRaw = (node, x) => { while (node.f !== undefined) node = x[node.f] <= node.t ? node.l : node.r; return node.p; };
+    const P = new Float64Array(n); for (let i = 0; i < n; i++) { let s2 = 0; for (const t of forest) s2 += leafBin(t, i); P[i] = s2 / TREES; }
+    const all = perm, tot = gain.reduce((s2, v) => s2 + v, 0) || 1;
+    const m = {
+      n_train: trainI.length, n_test: nTest, base_test: test.reduce((s2, i) => s2 + y[i], 0) / nTest, base_all: y.reduce((s2, v) => s2 + v, 0) / n,
+      auc_test: aucOf(P, y, test), auc_all: aucOf(P, y, all), roc_test: rocOf(P, y, test), roc_all: rocOf(P, y, all),
+      cm_test: cmsOf(P, y, test), cm_all: cmsOf(P, y, all), imp: Array.from(gain, v => v / tot)
+    };
+    const model = { prob: x => forest.reduce((s2, t) => s2 + leafRaw(t, x), 0) / TREES };
+    const run = { id: runs.length + 1, name: 'random_forest_v' + (runs.length + 1), feats: fs, split: Number(sp), m, model, window };
+    runs.unshift(run); selectRun(run);
+    $('train-prog').style.width = '100%';
+    return run;
+  }
   function selectRun(r) { activeRun = r; renderRuns(); renderResult(r); renderStatus(); }
   const impRows = r => r.feats.map((f, i) => ({ label: f, value: r.m.imp[i], alt: f === 'recency' })).sort((a, b) => b.value - a.value);
   function renderResult(r) {
+    if (!r) { $('res-auc').innerText = '–'; $('res-acc').innerText = '–'; $('res-badge').innerText = '–'; $('res-badge').className = 'badge'; $('leak-warn').hidden = true; $('res-imp').innerHTML = ''; return; }
     const s = metricsAt(r.m.cm_test[thrIndex(0.5)]), leak = r.feats.includes('recency');
     $('res-auc').innerText = r.m.auc_test.toFixed(3);
     $('res-acc').innerText = pct(s.acc);
@@ -1077,14 +1682,17 @@
     selectRun(runs.find(r => r.id === Number(tr.dataset.id)));
   });
   async function train() {
-    if (!DATA) return;
+    if (!DATA || (MODE === 'custom' && !C.built)) return;
     const feats = [...$('feat-list').querySelectorAll('input:checked')].map(b => b.value);
     if (!feats.length) { $('train-status').innerText = 'Select at least one feature'; return; }
     $('train-run').disabled = true; setStatus('train', 'run');
-    for (let t = 25; t <= 200; t += 25) { $('train-status').innerText = 'Training · ' + t + ' / 200 trees'; $('train-prog').style.width = (t / 2) + '%'; await wait(140); }
-    addRun(feats, split);
-    $('train-status').innerText = 'Logged to MLflow as ' + activeRun.name;
-    $('train-run').disabled = false; setStatus('train', 'ok');
+    try {
+      if (MODE === 'custom') await trainCustom(feats, split);
+      else { for (let t = 25; t <= 200; t += 25) { $('train-status').innerText = 'Training · ' + t + ' / 200 trees'; $('train-prog').style.width = (t / 2) + '%'; await wait(140); } addRun(feats, split); }
+      $('train-status').innerText = 'Logged as ' + activeRun.name;
+      setStatus('train', 'ok');
+    } catch (e) { $('train-status').innerText = e.message; setStatus('train', runs.length ? 'ok' : 'idle'); }
+    $('train-run').disabled = false;
   }
   $('train-run').onclick = train;
 
@@ -1112,24 +1720,28 @@
 
   // ---------- Insights ----------
   function renderInsights() {
+    if (!DATA || !DATA.insights) return;
     const I = DATA.insights, w = Number($('win').value), ch = I.churned_at[I.windows.indexOf(w)];
     $('win-lbl').innerText = w; $('i-win').innerHTML = w + ' <small>days</small>';
     $('i-churned').innerText = fmt(ch); $('i-rate').innerText = pct(ch / I.n); $('i-active').innerText = fmt(I.n - ch);
-    const max = Math.max(...I.recency_hist);
-    $('hist').innerHTML = I.recency_hist.map((v, i) => '<div class="' + (i * 30 >= w ? 'churn' : '') + '" style="height:' + (v / max * 100) + '%" title="' + (i * 30) + '–' + ((i + 1) * 30) + ' days: ' + fmt(v) + ' customers"></div>').join('');
+    const max = Math.max(1, ...I.recency_hist);
+    $('hist').innerHTML = I.recency_hist.map((v, i) => '<div class="' + (i * 30 >= w ? 'churn' : '') + '" style="height:' + (v / max * 100) + '%" title="' + (i * 30) + (i === 20 ? '+' : '–' + ((i + 1) * 30)) + ' days: ' + fmt(v) + ' customers"></div>').join('');
+    const f = I.freq;
+    bars('freq-bars', [{ label: '1 order', value: f[0] }, { label: '2 orders', value: f[1] }, { label: '3 orders', value: f[2] }, { label: '4+ orders', value: f[3] }], I.n, v => fmt(v));
     renderCustomers();
   }
   $('win').oninput = renderInsights;
   function renderCustomers() {
-    const q = $('cust-search').value.trim().toLowerCase(), w = Number($('win').value);
-    const rows = DATA.insights.sample.filter(c => c.customer_unique_id.includes(q));
-    $('cust-body').innerHTML = rows.length ? rows.map(c => '<tr><td class="id">' + c.customer_unique_id + '</td><td class="num">' + c.recency + '</td><td class="num">' + c.frequency + '</td><td class="num">' + c.monetary.toFixed(2) + '</td><td class="num">' + c.avg_order_value.toFixed(2) + '</td><td>' +
-      (c.recency > w ? '<span class="badge warn">Churned</span>' : '<span class="badge ok">Active</span>') + '</td></tr>').join('') : '<tr><td colspan="6" class="muted">No match in this sample</td></tr>';
+    if (!DATA || !DATA.insights) return;
+    const q = $('cust-search').value.trim().toLowerCase(), w = Number($('win').value), I = DATA.insights;
+    const rows = q && I.search ? I.search(q) : I.sample.filter(c => c.customer_unique_id.toLowerCase().includes(q));
+    $('cust-body').innerHTML = rows.length ? rows.map(c => '<tr><td class="id">' + esc(c.customer_unique_id) + '</td><td class="num">' + c.recency + '</td><td class="num">' + c.frequency + '</td><td class="num">' + c.monetary.toFixed(2) + '</td><td class="num">' + c.avg_order_value.toFixed(2) + '</td><td>' +
+      (c.recency > w ? '<span class="badge warn">Churned</span>' : '<span class="badge ok">Active</span>') + '</td></tr>').join('') : '<tr><td colspan="6" class="muted">No match</td></tr>';
   }
   $('cust-search').oninput = renderCustomers;
 
   // ---------- Prediction ----------
-  const state = { rec: 30, freq: 2, mon: 200 }, LIM = { rec: [1, 600], freq: [1, 25], mon: [10, 3000] };
+  const state = { rec: 30, freq: 2, mon: 200 };
   const body = v => ({ frequency: v.freq, monetary: v.mon, recency: v.rec, avg_order_value: +(v.mon / v.freq).toFixed(2) });
   function render() {
     ['rec', 'freq', 'mon'].forEach(k => { $('s-' + k).value = state[k]; $('e-' + k).value = state[k]; });
@@ -1137,21 +1749,37 @@
     $('v-freq').innerText = $('e-v-freq').innerText = state.freq + (state.freq === 1 ? ' order' : ' orders');
     $('v-mon').innerText = $('e-v-mon').innerText = brl(state.mon);
     $('v-aov').innerText = brl(state.mon / state.freq);
-    $('api-req').innerHTML = '<span class="k">POST</span> /predict\n' + JSON.stringify(body(state), null, 2);
+    $('api-req').innerHTML = MODE === 'example' ? '<span class="k">POST</span> /predict\n' + JSON.stringify(body(state), null, 2)
+      : '<span class="k">score</span> ' + esc(activeRun ? activeRun.name : 'no model') + '\n' + JSON.stringify(featObj(state), null, 2);
   }
-  function setField(k, v) { const [lo, hi] = LIM[k]; state[k] = Math.min(hi, Math.max(lo, Math.round(Number(v)))); render(); }
+  function applyPredictCtx() {
+    const L = CTX.lim;
+    [['rec', L.rec], ['freq', L.freq], ['mon', L.mon]].forEach(([k, [lo, hi]]) => { ['s-', 'e-'].forEach(p => { $(p + k).min = lo; $(p + k).max = hi; }); });
+    $('s-mon').step = $('e-mon').step = CTX.monStep;
+    $('sc-rec').innerText = L.rec[1] + ' days'; $('sc-freq').innerText = L.freq[1];
+    $('sc-mon0').innerText = withCur(fmt(L.mon[0])); $('sc-mon1').innerText = withCur(fmt(L.mon[1]));
+    Object.assign(state, CTX.defaults); render();
+  }
+  function setField(k, v) { const [lo, hi] = CTX.lim[k]; state[k] = Math.min(hi, Math.max(lo, Math.round(Number(v)))); render(); }
   const SEG = {
     new: ['New', 'Offer a small discount on the second order.'], regular: ['Regular', 'Send a reminder to order again.'],
     loyal: ['Loyal', 'Recommend related products and add reward points.'], vip: ['VIP', 'Thank them with a gift or early access.'],
     risk: ['At risk', 'Send a 15–20% win-back offer.']
   };
-  const segOf = ({ rec, freq, mon }) => rec > 120 ? 'risk' : mon > 1000 && freq >= 5 ? 'vip' : freq >= 3 ? 'loyal' : freq === 2 ? 'regular' : 'new';
+  const segOf = ({ rec, freq, mon }) => rec > CTX.riskDays ? 'risk' : mon > CTX.vipMon && freq >= 5 ? 'vip' : freq >= 3 ? 'loyal' : freq === 2 ? 'regular' : 'new';
   const action = (sg, churn) => churn ? (sg === 'risk' ? SEG.risk[1] : 'Reach out now with a personal offer.') : (sg === 'risk' ? 'Send a friendly check-in.' : SEG[sg][1]);
+  const featObj = v => ({ recency: v.rec, frequency: v.freq, monetary: v.mon, avg_order_value: +(v.mon / v.freq).toFixed(2), customer_lifetime_days: v.life != null ? v.life : (v.freq > 1 ? CTX.lifeRepeat : 0) });
   async function post(b) {
     for (let a = 0; ; a++) {
       try { const r = await fetch('/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b), signal: AbortSignal.timeout(8000) }); if (!r.ok) throw new Error(r.status); return await r.json(); }
       catch (e) { if (a >= 1) throw e; await new Promise(r => setTimeout(r, 600)); }
     }
+  }
+  async function score(v) {
+    if (MODE === 'example') return post(body(v));
+    if (!activeRun || !activeRun.model) throw new Error('no model');
+    const f = featObj(v), p = activeRun.model.prob(activeRun.feats.map(k => f[k]));
+    return { prediction: p >= 0.5 ? 1 : 0, probability: +p.toFixed(4), model: activeRun.name };
   }
   let latest = 0, settle;
   async function predict() {
@@ -1159,18 +1787,18 @@
     $('v-verdict').innerText = 'Scoring…'; $('v-verdict').style.color = 'var(--sub)';
     $('v-stage').innerText = SEG[sg][0] + ' customer';
     try {
-      const d = await post(body(v)); if (id !== latest) return;
+      const d = await score(v); if (id !== latest) return;
       $('api-out').innerText = JSON.stringify(d, null, 2);
       const p = d.probability !== undefined ? Math.round(d.probability * 100) : (d.prediction ? 100 : 0), churn = d.prediction === 1 || p > 50;
       $('v-prob').innerText = p + '%'; $('g-bar').style.width = p + '%'; $('g-bar').style.background = churn ? 'var(--warn)' : 'var(--accent)';
       $('v-verdict').innerText = churn ? 'Likely to leave' : 'Likely to stay'; $('v-verdict').style.color = churn ? 'var(--warn)' : 'var(--accent)';
       $('v-act').innerText = action(sg, churn);
-    } catch (e) { if (id !== latest) return; $('v-verdict').innerText = 'Could not score'; $('v-act').innerText = 'API unavailable. Try again.'; }
+    } catch (e) { if (id !== latest) return; $('v-verdict').innerText = 'Could not score'; $('v-act').innerText = MODE === 'example' ? 'API unavailable. Try again.' : 'Train a model first.'; }
   }
   function changed() { latest++; clearTimeout(settle); settle = setTimeout(predict, 250); }
   function whatIf(k) {
-    if (k === 'order') { const per = state.mon / state.freq; setField('rec', 1); setField('mon', Math.round((state.mon + per) / 5) * 5); setField('freq', state.freq + 1); }
-    else if (k === 'wait') setField('rec', state.rec + 60); else setField('mon', state.mon + 200);
+    if (k === 'order') { const per = state.mon / state.freq; setField('rec', 1); setField('mon', Math.round((state.mon + per) / CTX.monStep) * CTX.monStep); setField('freq', state.freq + 1); }
+    else if (k === 'wait') setField('rec', state.rec + 60); else setField('mon', state.mon + (MODE === 'example' ? 200 : Math.max(1, Math.round(CTX.defaults.mon))));
     clearTimeout(settle); predict();
   }
   function qGo(n) {
@@ -1178,42 +1806,61 @@
     document.querySelectorAll('.q-step').forEach(el => { el.hidden = Number(el.dataset.q) !== n; });
     const h = document.querySelector('.q-step[data-q="' + n + '"] [tabindex="-1"]'); if (h) h.focus({ preventScroll: true });
   }
-  function useExample(rec, freq, mon) { Object.assign(state, { rec, freq, mon }); render(); qGo(4); }
-  function restart() { Object.assign(state, { rec: 30, freq: 2, mon: 200 }); render(); qGo(0); }
-  render();
-
+  document.querySelectorAll('[data-ex]').forEach(b => b.addEventListener('click', () => { const [rec, freq, mon] = CTX.examples[Number(b.dataset.ex)]; Object.assign(state, { rec, freq, mon }); render(); qGo(4); }));
+  function restart() { Object.assign(state, CTX.defaults); render(); qGo(0); }
   function renderBatch(scores) {
+    if (!DATA || !DATA.insights) { $('batch-body').innerHTML = ''; return; }
     $('batch-body').innerHTML = DATA.insights.sample.map((c, i) => {
       const s = scores && scores[i], num = typeof s === 'number';
       const sg = segOf({ rec: c.recency, freq: c.frequency, mon: c.monetary });
-      return '<tr><td class="id">' + c.customer_unique_id.slice(0, 16) + '…</td><td class="num">' + c.recency + '</td><td class="num">' + c.frequency + '</td><td class="num">' + c.monetary.toFixed(2) + '</td><td class="num">' +
+      const id = String(c.customer_unique_id);
+      return '<tr><td class="id">' + esc(id.length > 18 ? id.slice(0, 16) + '…' : id) + '</td><td class="num">' + c.recency + '</td><td class="num">' + c.frequency + '</td><td class="num">' + c.monetary.toFixed(2) + '</td><td class="num">' +
         (num ? '<b style="color:' + (s > 0.5 ? 'var(--warn)' : 'var(--accent)') + '">' + Math.round(s * 100) + '%</b>' : s === 'err' ? 'error' : '–') + '</td><td>' + (num ? action(sg, s > 0.5) : '<span class="muted">–</span>') + '</td></tr>';
     }).join('');
   }
   $('batch-run').onclick = async () => {
-    if (!DATA) return;
+    if (!DATA || !DATA.insights) return;
     $('batch-run').disabled = true;
-    const out = await Promise.all(DATA.insights.sample.map(c => post({ frequency: c.frequency, monetary: c.monetary, recency: c.recency, avg_order_value: c.avg_order_value }).then(d => d.probability ?? d.prediction).catch(() => 'err')));
+    const out = await Promise.all(DATA.insights.sample.map(c => score({ rec: c.recency, freq: c.frequency, mon: c.monetary, life: c.customer_lifetime_days }).then(d => d.probability ?? d.prediction).catch(() => 'err')));
     renderBatch(out); $('batch-run').disabled = false; $('batch-run').innerText = 'Score again';
   };
 
-  // ---------- Dashboard (mart_daily_sales, rebuilt from the Olist source files) ----------
-  const money = v => v >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? 'R$ ' + (v / 1e3).toFixed(1) + 'K' : 'R$ ' + v.toFixed(0);
+  // ---------- Dashboard ----------
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const nice = iso => { const [y, m, d] = iso.split('-'); return Number(d) + ' ' + MON[m - 1] + ' ' + y; };
-  const EVENTS = { '2017-11-24': 'Black Friday' };
-  const INCOMPLETE = ['2018-08-23', '2018-09-03'], SPARSE = ['2016-10-11', '2017-01-04'];
+  let EVENTS = {}, BANDS = [], PRESETS = [];
   let S = null, DATES = [], dash = null, buckets = [], drag = null, geo = null;
   const idxOf = iso => { const i = DATES.indexOf(iso); return i >= 0 ? i : iso < DATES[0] ? 0 : DATES.length - 1; };
-  const PRESETS = { all: ['2016-09-04', '2018-09-03'], 2017: ['2017-01-01', '2017-12-31'], 2018: ['2018-01-01', '2018-09-03'], q4: ['2017-10-01', '2017-12-31'], bf: ['2017-11-17', '2017-12-01'] };
-
   function initDash(data) {
     S = data;
     const t0 = Date.parse(S.start + 'T00:00:00Z');
-    DATES = Array.from({ length: S.dates_n }, (_, i) => new Date(t0 + i * 864e5).toISOString().slice(0, 10));
-    dash = { from: 0, to: DATES.length - 1, gran: 'day', metric: 'revenue', state: '' };
-    $('d-from').min = $('d-to').min = DATES[0]; $('d-from').max = $('d-to').max = DATES[DATES.length - 1];
-    $('d-state').innerHTML = '<option value="">All states</option>' + Object.keys(S.states).sort().map(s => '<option>' + s + '</option>').join('');
+    DATES = Array.from({ length: S.dates_n }, (_, i) => new Date(t0 + i * DAY).toISOString().slice(0, 10));
+    dash = { from: 0, to: DATES.length - 1, gran: DATES.length > 1500 ? 'week' : 'day', metric: 'revenue', state: '' };
+    pressSeg('d-gran', dash.gran);
+    document.querySelectorAll('.kcell[data-metric]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.metric === 'revenue')));
+    const first = DATES[0], last = DATES[DATES.length - 1], back = n => DATES[Math.max(0, DATES.length - n)];
+    if (MODE === 'example') {
+      EVENTS = { '2017-11-24': 'Black Friday' };
+      BANDS = [[['2016-10-11', '2017-01-04'], 'Sparse data', 'band'], [['2018-08-23', '2018-09-03'], 'Incomplete', 'band-warn']];
+      PRESETS = [['all', 'All time', first, last], ['2017', '2017', '2017-01-01', '2017-12-31'], ['2018', '2018', '2018-01-01', last], ['q4', 'Q4 2017', '2017-10-01', '2017-12-31'], ['bf', "Black Friday '17", '2017-11-17', '2017-12-01']];
+    } else {
+      let pk = 0; S.revenue.forEach((v, i) => { if (v > S.revenue[pk]) pk = i; });
+      EVENTS = S.revenue[pk] > 0 ? { [DATES[pk]]: 'Peak day' } : {}; BANDS = [];
+      const years = [...new Set(DATES.map(d => d.slice(0, 4)))].slice(-3);
+      PRESETS = [['all', 'All time', first, last], ['30', 'Last 30 days', back(30), last], ['90', 'Last 90 days', back(90), last], ['365', 'Last 12 months', back(365), last]]
+        .concat(years.length > 1 ? years.map(y => [y, y, y + '-01-01', y + '-12-31']) : []);
+    }
+    $('d-preset').innerHTML = PRESETS.map(p => '<button aria-pressed="' + (p[0] === 'all') + '" data-v="' + p[0] + '">' + p[1] + '</button>').join('');
+    $('d-preset').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const p = PRESETS.find(x => x[0] === b.dataset.v); setRange(p[2], p[3], p[0]); }));
+    $('d-from').min = $('d-to').min = first; $('d-from').max = $('d-to').max = last;
+    const regions = Object.keys(S.states), hasReg = regions.length > 0, hasCat = Object.keys(S.cat_month).length > 0;
+    $('d-state').hidden = !hasReg;
+    $('d-state').innerHTML = '<option value="">All ' + esc(CTX.regionPlural) + '</option>' + regions.sort().map(s => '<option value="' + esc(s) + '">' + esc(s) + '</option>').join('');
+    $('d-states-card').hidden = !hasReg; $('d-cat-card').hidden = !hasCat;
+    $('d-lists').hidden = !hasReg && !hasCat;
+    $('d-lists').style.gridTemplateColumns = hasReg && hasCat ? '' : 'minmax(0, 1fr)';
+    $('d-states-title').innerText = 'Revenue by ' + (MODE === 'example' ? 'customer state' : CTX.region.replace(/_/g, ' '));
+    $('d-cust').innerText = CTX.customers[0]; $('d-cust-f').innerText = CTX.customers[1];
     renderDash();
   }
   function setRange(a, b, preset) {
@@ -1222,7 +1869,6 @@
     $('d-preset').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === preset)));
     renderDash();
   }
-  $('d-preset').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setRange(...PRESETS[b.dataset.v], b.dataset.v)));
   seg('d-gran', v => { dash.gran = v; renderDash(); });
   document.querySelectorAll('.kcell[data-metric]').forEach(c => c.addEventListener('click', () => {
     document.querySelectorAll('.kcell[data-metric]').forEach(x => x.setAttribute('aria-pressed', String(x === c)));
@@ -1232,11 +1878,10 @@
   $('d-to').onchange = () => $('d-to').value && setRange(DATES[dash.from], $('d-to').value);
   $('d-state').onchange = () => { dash.state = $('d-state').value; renderDash(); };
   $('d-ann').onchange = () => drawChart();
-  $('d-reset').onclick = () => { dash.state = ''; $('d-state').value = ''; setRange(...PRESETS.all, 'all'); };
-
+  $('d-reset').onclick = () => { dash.state = ''; $('d-state').value = ''; setRange(DATES[0], DATES[DATES.length - 1], 'all'); };
   function bucketKey(iso) {
     if (dash.gran === 'month') return iso.slice(0, 7);
-    if (dash.gran === 'week') { const d = new Date(iso + 'T00:00:00Z'), wd = (d.getUTCDay() + 6) % 7; return new Date(d - wd * 864e5).toISOString().slice(0, 10); }
+    if (dash.gran === 'week') { const d = new Date(iso + 'T00:00:00Z'), wd = (d.getUTCDay() + 6) % 7; return new Date(d - wd * DAY).toISOString().slice(0, 10); }
     return iso;
   }
   function renderDash() {
@@ -1251,18 +1896,17 @@
       b.i1 = i; b.r += R[i]; b.o += O[i]; rev += R[i]; ord += O[i];
       if (peak < 0 || R[i] > R[peak]) peak = i;
     }
-    const filtered = dash.state || dash.from !== 0 || dash.to !== DATES.length - 1;
-    $('d-reset').hidden = !filtered;
+    $('d-reset').hidden = !(dash.state || dash.from !== 0 || dash.to !== DATES.length - 1);
     $('d-rev').innerText = money(rev);
     $('d-rev-f').innerText = nice(DATES[dash.from]) + ' – ' + nice(DATES[dash.to]);
     $('d-ord').innerText = fmt(ord);
-    $('d-aov').innerText = ord ? 'R$ ' + (rev / ord).toFixed(2) : '–';
+    $('d-aov').innerText = ord ? brl(rev / ord) : '–';
     const nd = dash.to - dash.from + 1;
     $('d-ord-f').innerText = '≈ ' + fmt(Math.round(ord / nd)) + ' per day';
     $('d-aov-f').innerText = fmt(nd) + ' days';
     const hasPeak = peak >= 0 && R[peak] > 0;
     $('d-peak').innerText = hasPeak ? money(R[peak]) : '–';
-    $('d-peak-f').innerText = hasPeak ? nice(DATES[peak]) + (EVENTS[DATES[peak]] ? ' · ' + EVENTS[DATES[peak]] : '') : 'No sales in range';
+    $('d-peak-f').innerText = hasPeak ? nice(DATES[peak]) + (EVENTS[DATES[peak]] && MODE === 'example' ? ' · ' + EVENTS[DATES[peak]] : '') : 'No sales in range';
     $('d-chart-title').innerText = { revenue: 'Revenue', orders: 'Orders', aov: 'Avg order value' }[dash.metric] + ' per ' + dash.gran + (dash.state ? ' · ' + dash.state : '');
     drawChart();
     renderStates(); renderCats();
@@ -1282,23 +1926,24 @@
   }
   function renderStates() {
     const all = Object.entries(S.states).map(([k, v]) => { let s = 0; for (let i = dash.from; i <= dash.to; i++) s += v.r[i]; return { label: k, value: s }; }).sort((a, b) => b.value - a.value);
+    if (!all.length) return;
     let top = all.slice(0, 10);
     if (dash.state && !top.find(r => r.label === dash.state)) top = top.slice(0, 9).concat(all.find(r => r.label === dash.state));
     rankRows('d-states', top, Math.max(1, all[0].value), { click: st => { dash.state = dash.state === st ? '' : st; $('d-state').value = dash.state; renderDash(); } });
-    $('d-states-meta').innerText = dash.state ? 'Filtered to ' + dash.state : 'Top 10 of ' + all.length;
+    $('d-states-meta').innerText = dash.state ? 'Filtered to ' + dash.state : 'Top ' + Math.min(10, all.length) + ' of ' + all.length;
   }
   function renderCats() {
+    if (!Object.keys(S.cat_month).length) return;
     const m0 = S.months.indexOf(DATES[dash.from].slice(0, 7)), m1 = S.months.indexOf(DATES[dash.to].slice(0, 7));
     const rows = Object.entries(S.cat_month).map(([k, v]) => ({ label: k, name: k.replace(/_/g, ' '), value: v.slice(m0, m1 + 1).reduce((a, b) => a + b, 0) }));
     const blank = rows.find(r => r.label === '(Blank)');
     const top = rows.filter(r => r.label !== '(Blank)' && r.value > 0).sort((a, b) => b.value - a.value).slice(0, 9);
     if (blank && blank.value > 0) top.push({ label: '(Blank)', name: 'No category', value: blank.value, muted: true });
     rankRows('cat-bars', top, Math.max(1, ...top.map(r => r.value)));
-    $('cat-meta').innerText = 'Top 9 · ' + (m0 === m1 ? S.months[m0] : S.months[m0] + ' to ' + S.months[m1]) + ' · all states';
+    $('cat-meta').innerText = 'Top ' + Math.min(9, top.length) + ' · ' + (m0 === m1 ? S.months[m0] : S.months[m0] + ' to ' + S.months[m1]);
   }
-
   const val = b => dash.metric === 'revenue' ? b.r : dash.metric === 'orders' ? b.o : (b.o ? b.r / b.o : 0);
-  const axVal = v => dash.metric === 'orders' ? fmt(Math.round(v)) : v >= 1e6 ? 'R$ ' + +(v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? 'R$ ' + +(v / 1e3).toFixed(0) + 'K' : 'R$ ' + Math.round(v);
+  const axVal = v => dash.metric === 'orders' ? fmt(Math.round(v)) : withCur(v >= 1e6 ? +(v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? +(v / 1e3).toFixed(1) + 'K' : String(+v.toFixed(1)));
   function niceStep(max, n) { const raw = max / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
   function drawChart() {
     const box = $('d-chart'), svg = $('d-svg');
@@ -1310,12 +1955,11 @@
     const top = 22 + (evs.length ? 20 : 0), H = (phone ? 220 : 280) + (evs.length ? 20 : 0);
     const P = { l: 58, r: 8, t: top, b: 26 };
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', W); svg.setAttribute('height', H);
-    const step = niceStep(Math.max(...vals) || 1, 4), max = Math.max(step, Math.ceil((Math.max(...vals) * 1.04) / step) * step);
+    const vmax = Math.max(...vals) || 1, step = niceStep(vmax, 4), max = Math.max(step, Math.ceil((vmax * 1.04) / step) * step);
     const x = i => n === 1 ? (P.l + W - P.r) / 2 : P.l + i / (n - 1) * (W - P.l - P.r);
     const y = v => P.t + (1 - v / max) * (H - P.t - P.b);
     geo = { x, y, n, P, W, H };
     let g = '';
-    // Shaded bands, drawn first so the grid and line sit on top
     const band = ([a, b2], label, cls) => {
       if (!ann || a > DATES[dash.to] || b2 < DATES[dash.from]) return '';
       const lo = a <= DATES[dash.from] ? 0 : bIdx(a), hi = b2 >= DATES[dash.to] ? n - 1 : bIdx(b2);
@@ -1324,12 +1968,12 @@
       return '<rect x="' + x0 + '" y="' + P.t + '" width="' + w + '" height="' + (H - P.t - P.b) + '" class="' + cls + '"/>' +
         (w > 56 ? '<text x="' + (x0 + 6) + '" y="' + (P.t + 14) + '" class="ann-s">' + label + '</text>' : '');
     };
-    g += band(SPARSE, 'Sparse data', 'band') + band(INCOMPLETE, 'Incomplete', 'band-warn');
+    BANDS.forEach(b => { g += band(b[0], b[1], b[2]); });
     const ticks = Math.round(max / step);
     for (let k = 0; k <= ticks; k++) {
       const v = step * k, yy = y(v);
       g += '<line x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + yy + '" y2="' + yy + '" class="' + (k ? 'grid-l' : 'base-l') + '"/>' +
-        '<text x="' + (P.l - 10) + '" y="' + (yy + 4) + '" class="ax" text-anchor="end">' + axVal(v) + '</text>';
+        '<text x="' + (P.l - 10) + '" y="' + (yy + 4) + '" class="ax" text-anchor="end">' + esc(axVal(v)) + '</text>';
     }
     const xt = Math.min(n, phone ? 3 : 6);
     for (let k = 0; k < xt; k++) {
@@ -1339,11 +1983,10 @@
     }
     const line = vals.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join('');
     g += '<path d="' + line + 'L' + x(n - 1).toFixed(1) + ' ' + y(0) + 'L' + x(0).toFixed(1) + ' ' + y(0) + 'Z" class="area"/><path d="' + line + '" class="ln"/>';
-    // Event labels sit in a reserved row above the plot, joined to their point by a leader line
     evs.forEach(e => {
       const ex = x(e.i), right = ex > W - 200, ty = 14;
       g += '<line x1="' + ex + '" x2="' + ex + '" y1="' + (ty + 5) + '" y2="' + (y(vals[e.i]) - 4) + '" class="lead-l"/>' +
-        '<text x="' + (right ? ex - 6 : ex + 6) + '" y="' + ty + '" text-anchor="' + (right ? 'end' : 'start') + '"><tspan class="ann-t">' + EVENTS[e.d] + '</tspan><tspan class="ann-s"> · ' + nice(e.d) + ' · ' + dayVal(DATES.indexOf(e.d)) + '</tspan></text>';
+        '<text x="' + (right ? ex - 6 : ex + 6) + '" y="' + ty + '" text-anchor="' + (right ? 'end' : 'start') + '"><tspan class="ann-t">' + EVENTS[e.d] + '</tspan><tspan class="ann-s"> · ' + nice(e.d) + ' · ' + esc(dayVal(DATES.indexOf(e.d))) + '</tspan></text>';
     });
     g += '<line id="d-guide" class="guide" y1="' + P.t + '" y2="' + (H - P.b) + '" visibility="hidden"/><circle id="d-dot" r="4" class="dot-h" visibility="hidden"/><rect id="d-sel" class="sel" y="' + P.t + '" height="' + (H - P.t - P.b) + '" visibility="hidden"/>';
     svg.innerHTML = g;
@@ -1389,29 +2032,89 @@
     ['Entity', 'Customer', 'Student'], ['Recency', 'Days since last purchase', 'Days since last class or LMS login'],
     ['Frequency', 'Number of orders', 'Submissions and logins'], ['Monetary', 'Total spent', 'Assessment trend'],
     ['Target', 'Churn: no order in 120 days', 'Dropout risk'], ['Action', 'Win-back offer', 'Early mentoring'],
-    ['Sources', '9 marketplace files', 'Admissions, attendance, LMS, exams']
+    ['Sources', 'Order and customer files', 'Admissions, attendance, LMS, exams']
   ];
   function renderDom(v) { const c = v === 'student' ? 2 : 1; $('dom-col').innerText = DOM[0][c]; $('dom-body').innerHTML = DOM.slice(1).map(r => '<tr><td class="muted">' + r[0] + '</td><td>' + r[c] + '</td></tr>').join(''); }
   seg('dom-seg', renderDom); renderDom('customer');
 
+  // ---------- Switching datasets ----------
+  function renderOverview() {
+    const ov = MODE === 'example' || C.built ? CTX.overview : [['–', ''], ['–', ''], ['–', ''], ['–', '']];
+    ov.forEach(([v, f], i) => { $('ov-' + i).innerText = v; $('ov-' + i + 'f').innerText = f; });
+    const l = FILES.filter(f => f.loaded);
+    $('ov-source').innerHTML = MODE === 'example'
+      ? '<span class="lbl">Data source</span><b>Olist</b><span class="muted">Brazilian e-commerce marketplace · São Paulo</span><a href="https://olist.com" target="_blank" rel="noopener">olist.com ↗</a><a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce" target="_blank" rel="noopener">Kaggle dataset ↗</a><span class="meta">CC BY-NC-SA 4.0 · amounts in BRL</span>'
+      : '<span class="lbl">Data source</span><b>Your files</b><span class="muted">' + (FILES.length ? esc(FILES.map(f => f.name).slice(0, 4).join(', ')) + (FILES.length > 4 ? ' +' + (FILES.length - 4) : '') : 'none') + '</span>' +
+        (l.length ? '<span class="meta">' + fmt(l.reduce((s, f) => s + f.rows, 0)) + ' rows · processed in this browser</span>' : '') + '<a href="#ingest">Manage files</a>';
+  }
+  function refreshMoney() { if (S) renderDash(); render(); if (CTX) { $('sc-mon0').innerText = withCur(fmt(CTX.lim.mon[0])); $('sc-mon1').innerText = withCur(fmt(CTX.lim.mon[1])); } }
+  function applyData() {
+    document.body.classList.toggle('no-mart', MODE === 'custom' && !C.built);
+    const ex = MODE === 'example';
+    $('dag-m1').innerText = ex ? 'python ingestion.py' : tablesLoaded().length + ' tables';
+    $('dag-m2').innerText = ex ? 'dbt run · 11 models' : 'join · clean · aggregate';
+    $('dag-m3').innerText = ex ? 'dbt test · 18 tests' : '8 tests';
+    $('ba-l1').innerText = ex ? 'Raw order' : 'Raw rows'; $('ba-l2').innerText = ex ? 'stg_orders' : 'Orders'; $('ba-l3').innerText = ex ? 'mart_customer_rfm' : 'Customers';
+    showBA(baView); renderRules();
+    if (CTX) applyPredictCtx();
+    renderInsights(); renderBatch(); splitNote(); renderResult(activeRun); renderRuns(); renderEval();
+    renderOverview(); renderMapping();
+  }
+  function enterCustom() {
+    MODE = 'custom'; CUR = '';
+    FILES = FILES.filter(f => !f.example); schemaIdx = -1; clearSchema();
+    dataChanged(true);
+  }
+  // Any change to files or mapping invalidates the results built from them
+  function dataChanged(keepTerm) {
+    C.built = false; C.mart = null; DATA = null; S = null; runs = []; activeRun = null;
+    CHECKS = []; chkDone = 0; TESTS = []; BA = null; RULES = []; CTX = Object.assign({}, EX_CTX, { overview: null, customers: ['–', ''] });
+    if (!keepTerm) $('dag-term').innerHTML = '<span class="dim">Trigger the DAG to see task logs.</span>';
+    ['ingest', 'run', 'test'].forEach(k => task(k, 'queued'));
+    $('dag-status').innerText = 'last run: none';
+    resetStatus(); autoMap(); $('ing-prog').style.width = FILES.some(f => f.loaded) ? '100%' : '0%';
+    renderFiles(); renderChecks(); renderTests(0); applyData(); renderStatus();
+  }
+  function markStale() {
+    DATA = null; S = null; runs = []; activeRun = null; TESTS = []; renderTests(0);
+    ['insights', 'train', 'evaluate', 'predict', 'dashboard'].forEach(k => { STATUS[k] = 'idle'; }); STATUS.clean = 'idle';
+    applyData(); renderStatus();
+  }
+  function enterExample() {
+    if (FILES.some(f => f.loading)) return;
+    MODE = 'example'; CUR = 'R$'; CTX = EX_CTX;
+    FILES = exampleFiles(); schemaIdx = -1; clearSchema();
+    $('ing-term').innerHTML = '<span class="dim">Waiting for a load…</span>'; $('ing-prog').style.width = '0%';
+    CHECKS = EX_CHECKS; chkDone = 0; TESTS = EX_TESTS; BA = EX_BA; RULES = EX_RULES; C.built = false;
+    $('dag-term').innerHTML = '<span class="dim">Trigger the DAG to see task logs.</span>';
+    ['ingest', 'run', 'test'].forEach(k => task(k, 'queued')); $('dag-status').innerText = '@daily · last run: none';
+    resetStatus();
+    runs = []; activeRun = null;
+    if (EXAMPLE) { DATA = EXAMPLE.models; addRun(DEFAULT_FEATS, '20', 'random_forest_v1'); initDash(EXAMPLE.sales); }
+    renderFiles(); renderChecks(); renderTests(0); applyData(); renderStatus();
+  }
+
   // ---------- Run full pipeline ----------
   $('run-all').onclick = async () => {
+    if (MODE === 'custom' && !FILES.some(f => f.loaded)) { location.hash = 'ingest'; return; }
     $('run-all').disabled = true; fast = true;
-    try { await runIngestion(true); await runChecks(); await runDag(); } finally { fast = false; $('run-all').disabled = false; }
+    try {
+      if (MODE === 'example') { await runIngestion(true); await runChecks(); await runDag(); }
+      else { await runChecks(); if (!mappingError()) await runDag(); else location.hash = 'clean'; }
+    } finally { fast = false; $('run-all').disabled = false; }
   };
 
   // ---------- Boot ----------
-  fetch('/health').then(r => r.ok ? r.json() : Promise.reject()).then(() => { $('api-text').innerText = 'API live · model v1'; setStatus('predict', 'ok'); })
+  CTX = EX_CTX; resetStatus();
+  fetch('/health').then(r => r.ok ? r.json() : Promise.reject()).then(() => { apiOk = true; $('api-text').innerText = 'API live · model v1'; if (MODE === 'example') setStatus('predict', 'ok'); })
     .catch(() => { $('api-dot').classList.add('off'); $('api-text').innerText = 'API unavailable'; });
-  fetch('/static/models.json').then(r => r.json()).then(d => {
-    DATA = d;
-    const f = d.insights.freq;
-    bars('freq-bars', [{ label: '1 order', value: f[0] }, { label: '2 orders', value: f[1] }, { label: '3 orders', value: f[2] }, { label: '4+ orders', value: f[3] }], d.insights.n, v => fmt(v));
-    addRun(DEFAULT_FEATS, '20', 'random_forest_v1');
-    renderInsights(); renderBatch(); renderEval();
+  Promise.all([fetch('/static/models.json').then(r => r.json()), fetch('/static/sales.json').then(r => r.json())]).then(([models, sales]) => {
+    EXAMPLE = { models, sales };
+    if (MODE !== 'example') return;
+    DATA = models; addRun(DEFAULT_FEATS, '20', 'random_forest_v1'); initDash(sales);
+    applyData(); renderStatus();
   });
-  fetch('/static/sales.json').then(r => r.json()).then(initDash);
-  renderStatus();
+  renderFiles(); renderChecks(); renderTests(0); applyPredictCtx(); renderOverview(); renderStatus();
   show(location.hash.slice(1) || 'overview', false);
 </script>
 </body>
