@@ -240,33 +240,77 @@
     @media (max-width: 600px) { .pager .hint { display: none; } }
     footer { padding: 14px 28px; border-top: 1px solid var(--line); font-size: 12px; color: var(--sub); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     footer a { color: var(--fg); font-weight: 600; text-decoration: none; }
-    .g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    @media (max-width: 1100px) { .g5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-    @media (max-width: 600px) { .g5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    .filters { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; }
-    .filter { display: flex; flex-direction: column; gap: 4px; }
-    .filter input[type="date"] { font-weight: 500; padding: 5px 8px; }
-    .chart { position: relative; width: 100%; }
+    /* Dashboard */
+    .dash-title { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 16px; }
+    .dash-title h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.2; }
+    .dash-title .finding { margin-top: 4px; font-size: 15px; color: var(--sub); max-width: 70ch; }
+    .dash-title .finding b { color: var(--fg); font-weight: 600; }
+    .dash-title .source-line { font-size: 12px; color: var(--sub); white-space: nowrap; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+    .filter-row .seg button { height: 28px; }
+    .ctl { height: 34px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); padding: 0 10px; font-size: 13px; font-weight: 500; color: var(--fg); display: inline-flex; align-items: center; gap: 6px; }
+    .ctl input[type="date"] { border: 0; background: none; font: inherit; color: inherit; padding: 0; height: 100%; }
+    .ctl .muted { font-weight: 400; }
+    select.ctl { cursor: pointer; padding-right: 6px; }
+    .filter-row .spacer { flex: 1; }
+    .linkbtn { appearance: none; border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 4px; }
+    .linkbtn[hidden] { display: none; }
+
+    .panel-main { padding: 0; overflow: hidden; }
+    .kstrip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+    .kcell { appearance: none; background: none; border: 0; text-align: left; padding: 16px 20px 14px; border-right: 1px solid var(--line); position: relative; color: var(--fg); min-width: 0; }
+    .kcell:last-child { border-right: 0; }
+    button.kcell { cursor: pointer; }
+    button.kcell:hover { background: #FAF9F6; }
+    button.kcell[aria-pressed="true"]::after { content: ""; position: absolute; left: 20px; right: 20px; bottom: -1px; height: 2px; background: var(--fg); }
+    .kcell .k-label { font-size: 13px; color: var(--sub); font-weight: 500; }
+    .kcell .k-value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.3; margin-top: 2px; white-space: nowrap; }
+    .kcell.lead .k-value { font-size: 30px; }
+    .kcell .k-sub { font-size: 12px; color: var(--sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .kcell .k-sub.warn { color: var(--warn); }
+    @media (max-width: 1100px) { .kstrip { grid-template-columns: repeat(3, minmax(0, 1fr)); } .kcell:nth-child(3) { border-right: 0; } .kcell:nth-child(-n+3) { border-bottom: 1px solid var(--line); } }
+    @media (max-width: 600px) { .kstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kcell { border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line); padding: 12px 14px; } .kcell:nth-child(2n) { border-right: 0 !important; } .kcell:last-child { grid-column: 1 / -1; border-bottom: 0; } .kcell.lead .k-value { font-size: 24px; } .kcell .k-value { font-size: 20px; } }
+
+    .chart-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 20px 0; }
+    .chart-head .card-title { font-size: 14px; }
+    .chart-tools { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .chart { position: relative; width: 100%; padding: 4px 20px 12px; }
     .chart svg { display: block; width: 100%; touch-action: pan-y; cursor: crosshair; user-select: none; }
-    .chart .grid-l { stroke: var(--line); stroke-width: 1; }
-    .chart .ax { font-size: 11px; fill: var(--sub); font-family: var(--font); }
-    .chart .ln { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linejoin: round; }
-    .chart .area { fill: var(--accent); opacity: 0.08; }
-    .chart .band { fill: var(--inset); opacity: 0.8; }
-    .chart .warn-band { fill: var(--warn-bg); }
-    .chart .band-t { font-weight: 600; }
-    .chart .mark { fill: var(--warn); stroke: #fff; stroke-width: 2; }
-    .chart .mark-t { fill: var(--warn); font-weight: 700; }
-    .chart .guide { stroke: var(--sub); stroke-width: 1; stroke-dasharray: 3 3; }
-    .chart .dot-h { fill: var(--fg); stroke: #fff; stroke-width: 2; }
-    .chart .sel { fill: var(--accent); opacity: 0.12; }
-    .tip { position: absolute; background: var(--fg); color: #fff; border-radius: 6px; padding: 8px 10px; font-size: 12px; pointer-events: none; display: flex; flex-direction: column; gap: 2px; min-width: 170px; box-shadow: 0 4px 14px rgba(12,59,63,0.18); }
+    .chart .grid-l { stroke: #ECE9E2; stroke-width: 1; }
+    .chart .base-l { stroke: #C9C4B8; stroke-width: 1; }
+    .chart .ax { font-size: 11px; fill: var(--sub); font-family: var(--font); font-variant-numeric: tabular-nums; }
+    .chart .ln { fill: none; stroke: var(--accent); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
+    .chart .area { fill: var(--accent); opacity: 0.07; }
+    .chart .band { fill: #F1EFE9; }
+    .chart .band-warn { fill: #FBF1E3; }
+    .chart .lead-l { stroke: var(--sub); stroke-width: 1; }
+    .chart .ann-t { font-size: 11px; fill: var(--fg); font-weight: 600; font-family: var(--font); }
+    .chart .ann-s { font-size: 11px; fill: var(--sub); font-family: var(--font); }
+    .chart .guide { stroke: var(--fg); stroke-width: 1; opacity: 0.35; }
+    .chart .dot-h { fill: var(--accent); stroke: #fff; stroke-width: 2; }
+    .chart .sel { fill: var(--accent); opacity: 0.1; }
+    .tip { position: absolute; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12px; pointer-events: none; min-width: 168px; box-shadow: 0 6px 16px rgba(12,59,63,0.10); }
     .tip[hidden] { display: none; }
-    .tip span { display: flex; justify-content: space-between; gap: 12px; color: #C9D8D5; }
-    .tip span b { color: #fff; font-variant-numeric: tabular-nums; }
-    .click-bars .bar-row { cursor: pointer; border-radius: 4px; }
-    .click-bars .bar-row:hover { background: var(--inset); }
-    figure img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--line); }
+    .tip .t-date { color: var(--sub); margin-bottom: 4px; }
+    .tip .t-row { display: flex; justify-content: space-between; gap: 14px; color: var(--sub); }
+    .tip .t-row b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .tip .t-row.main b { font-size: 14px; }
+
+    .rank { display: grid; gap: 2px; }
+    .rank-row { display: grid; grid-template-columns: minmax(70px, 150px) minmax(0, 1fr) 72px; gap: 12px; align-items: center; padding: 6px 8px; margin: 0 -8px; border-radius: 6px; font-size: 13px; }
+    .rank-row .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-row .track { height: 8px; }
+    .rank-row .fill { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; transition: width 0.25s ease; min-width: 2px; }
+    .rank-row .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .rank-row.muted-row .fill { background: #B9B3A6; }
+    .rank-row.muted-row .lab { color: var(--sub); }
+    button.rank-row { appearance: none; border: 0; background: none; width: calc(100% + 16px); text-align: left; cursor: pointer; color: var(--fg); font: inherit; font-size: 13px; }
+    button.rank-row:hover { background: var(--inset); }
+    button.rank-row[aria-pressed="true"] { background: #EEF5F3; }
+    button.rank-row[aria-pressed="true"] .lab { font-weight: 700; }
+    @media (max-width: 600px) { .rank-row { grid-template-columns: minmax(48px, 96px) minmax(0, 1fr) 66px; gap: 8px; } }
+    .rank-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--sub); }
+    figure img {    figure img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--line); }
 
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
@@ -651,72 +695,61 @@
 
       <!-- ========== DASHBOARD ========== -->
       <section class="page" data-page="dashboard" data-title="Dashboard" data-group="Reporting" hidden>
-        <div class="page-head">
-          <div><h1 tabindex="-1">Executive dashboard</h1><p class="sub">mart_daily_sales · revenue = item price by purchase date</p></div>
-          <div class="head-actions">
-            <select id="d-state" class="chip" aria-label="Customer state"><option value="">All states</option></select>
-            <button class="btn ghost" id="d-reset">Reset filters</button>
+        <div class="dash-title">
+          <div>
+            <h1 tabindex="-1">Sales</h1>
+            <p class="finding" id="d-finding" aria-live="polite">–</p>
           </div>
+          <span class="source-line">mart_daily_sales · revenue = item price by purchase date</span>
         </div>
         <div class="notes pn">
-          <p><b>Descriptive analytics.</b> Click "Black Friday '17": 24 Nov 2017, R$ 152.7K from 1,166 orders. The fall at the end is the dataset ending, not the company. Toggle the customer card: IDs vs people.</p>
+          <p><b>Descriptive analytics.</b> Click "Black Friday '17": 24 Nov 2017, R$ 152.7K from 1,166 orders. The drop at the end is the dataset ending, not the company. The Customers cell: Power BI counted IDs (99,441), not people (96,096).</p>
           <p class="q">Ask: What happened on that day? Did the company collapse at the end?</p>
         </div>
 
-        <div class="card filters">
-          <div class="filter"><span class="meta">Period</span>
-            <div class="seg" id="d-preset">
-              <button aria-pressed="true" data-v="all">All</button>
-              <button aria-pressed="false" data-v="2017">2017</button>
-              <button aria-pressed="false" data-v="2018">2018</button>
-              <button aria-pressed="false" data-v="bf">Black Friday '17</button>
-              <button aria-pressed="false" data-v="q4">Q4 2017</button>
+        <div class="filter-row" role="group" aria-label="Filters">
+          <div class="seg" id="d-preset">
+            <button aria-pressed="true" data-v="all">All time</button>
+            <button aria-pressed="false" data-v="2017">2017</button>
+            <button aria-pressed="false" data-v="2018">2018</button>
+            <button aria-pressed="false" data-v="q4">Q4 2017</button>
+            <button aria-pressed="false" data-v="bf">Black Friday '17</button>
+          </div>
+          <label class="ctl"><span class="muted">From</span><input type="date" id="d-from" aria-label="From date"></label>
+          <label class="ctl"><span class="muted">To</span><input type="date" id="d-to" aria-label="To date"></label>
+          <select id="d-state" class="ctl" aria-label="Customer state"><option value="">All states</option></select>
+          <button class="linkbtn" id="d-reset" hidden>Clear filters</button>
+        </div>
+
+        <div class="card panel-main">
+          <div class="kstrip" role="group" aria-label="Metric">
+            <button class="kcell lead" data-metric="revenue" aria-pressed="true"><div class="k-label">Revenue</div><div class="k-value" id="d-rev">–</div><div class="k-sub" id="d-rev-f"></div></button>
+            <button class="kcell" data-metric="orders" aria-pressed="false"><div class="k-label">Orders</div><div class="k-value" id="d-ord">–</div><div class="k-sub">with at least one item</div></button>
+            <button class="kcell" data-metric="aov" aria-pressed="false"><div class="k-label">Avg order value</div><div class="k-value" id="d-aov">–</div><div class="k-sub">revenue ÷ orders</div></button>
+            <div class="kcell"><div class="k-label">Best day</div><div class="k-value" id="d-peak">–</div><div class="k-sub" id="d-peak-f"></div></div>
+            <div class="kcell"><div class="k-label">Customers</div><div class="k-value">96,096</div><div class="k-sub warn">Power BI card: 99,441 (IDs)</div></div>
+          </div>
+          <div class="chart-head">
+            <span class="card-title" id="d-chart-title">Revenue per day</span>
+            <div class="chart-tools">
+              <div class="seg" id="d-gran"><button aria-pressed="true" data-v="day">Day</button><button aria-pressed="false" data-v="week">Week</button><button aria-pressed="false" data-v="month">Month</button></div>
+              <label class="toggle"><input type="checkbox" id="d-ann" checked> Notes</label>
             </div>
           </div>
-          <div class="filter"><span class="meta">From</span><input type="date" id="d-from" class="chip" aria-label="From date"></div>
-          <div class="filter"><span class="meta">To</span><input type="date" id="d-to" class="chip" aria-label="To date"></div>
-          <div class="filter"><span class="meta">Interval</span>
-            <div class="seg" id="d-gran"><button aria-pressed="true" data-v="day">Day</button><button aria-pressed="false" data-v="week">Week</button><button aria-pressed="false" data-v="month">Month</button></div>
-          </div>
-          <div class="filter"><span class="meta">Metric</span>
-            <div class="seg" id="d-metric"><button aria-pressed="true" data-v="revenue">Revenue</button><button aria-pressed="false" data-v="orders">Orders</button><button aria-pressed="false" data-v="aov">Avg order</button></div>
-          </div>
-        </div>
-
-        <div class="grid g5 mt">
-          <div class="card kpi"><div class="label">Revenue</div><div class="value" id="d-rev">–</div><div class="foot" id="d-rev-f"></div></div>
-          <div class="card kpi"><div class="label">Orders</div><div class="value" id="d-ord">–</div><div class="foot">with at least one item</div></div>
-          <div class="card kpi"><div class="label">Avg order value</div><div class="value" id="d-aov">–</div><div class="foot">revenue ÷ orders</div></div>
-          <div class="card kpi"><div class="label">Peak day</div><div class="value" id="d-peak">–</div><div class="foot" id="d-peak-f"></div></div>
-          <div class="card kpi"><div class="label">Customers <span class="badge warn" id="cust-flag">IDs</span></div><div class="value" id="cust-val">99,441</div>
-            <div class="seg" id="cust-seg" style="margin-top:6px"><button aria-pressed="true" data-v="ids">IDs</button><button aria-pressed="false" data-v="people">People</button></div></div>
-        </div>
-
-        <div class="card mt">
-          <div class="card-head">
-            <span class="card-title" id="d-chart-title">Revenue per day</span>
-            <span class="meta">Drag on the chart to zoom · <label class="toggle" style="display:inline-flex"><input type="checkbox" id="d-ann" checked> Annotations</label></span>
-          </div>
           <div class="chart" id="d-chart">
-            <svg id="d-svg" role="img" aria-label="Revenue over time"></svg>
+            <svg id="d-svg" role="img" aria-label="Sales over time"></svg>
             <div class="tip" id="d-tip" hidden></div>
           </div>
         </div>
 
-        <div class="grid g2 mt">
+        <div class="grid g2 mt" style="align-items:start">
           <div class="card">
-            <div class="card-head"><span class="card-title">Revenue by customer state</span><span class="meta">Click a state to filter</span></div>
-            <div class="bars click-bars" id="d-states"></div>
+            <div class="card-head"><span class="card-title">Revenue by customer state</span><span class="meta" id="d-states-meta">Top 10 · select to filter</span></div>
+            <div class="rank" id="d-states"></div>
           </div>
           <div class="card">
-            <div class="card-head"><span class="card-title">Revenue by category</span>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-                <div class="seg" id="topn-seg"><button aria-pressed="false" data-v="5">Top 5</button><button aria-pressed="true" data-v="10">Top 10</button><button aria-pressed="false" data-v="15">Top 15</button></div>
-                <label class="toggle"><input type="checkbox" id="blank-tog" checked> (Blank)</label>
-              </div>
-            </div>
-            <div class="bars" id="cat-bars"></div>
-            <p class="meta mt" id="cat-note"></p>
+            <div class="card-head"><span class="card-title">Revenue by category</span><span class="meta" id="cat-meta"></span></div>
+            <div class="rank" id="cat-bars"></div>
           </div>
         </div>
       </section>
@@ -1159,17 +1192,14 @@
   };
 
   // ---------- Dashboard (mart_daily_sales, rebuilt from the Olist source files) ----------
-  seg('cust-seg', v => {
-    const ppl = v === 'people';
-    $('cust-val').innerText = ppl ? '96,096' : '99,441';
-    $('cust-flag').className = 'badge ' + (ppl ? 'ok' : 'warn'); $('cust-flag').innerText = ppl ? 'People' : 'IDs';
-  });
   const money = v => v >= 1e6 ? 'R$ ' + (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? 'R$ ' + (v / 1e3).toFixed(1) + 'K' : 'R$ ' + v.toFixed(0);
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const nice = iso => { const [y, m, d] = iso.split('-'); return Number(d) + ' ' + MON[m - 1] + ' ' + y; };
-  let S = null, DATES = [], dash = null, topN = 10, drag = null, buckets = [];
-  const idxOf = iso => Math.max(0, Math.min(DATES.length - 1, DATES.indexOf(iso) >= 0 ? DATES.indexOf(iso) : (iso < DATES[0] ? 0 : DATES.length - 1)));
-  const PRESETS = { all: ['2016-09-04', '2018-09-03'], 2017: ['2017-01-01', '2017-12-31'], 2018: ['2018-01-01', '2018-09-03'], bf: ['2017-11-17', '2017-12-01'], q4: ['2017-10-01', '2017-12-31'] };
+  const EVENTS = { '2017-11-24': 'Black Friday' };
+  const INCOMPLETE = ['2018-08-23', '2018-09-03'], SPARSE = ['2016-10-11', '2017-01-04'];
+  let S = null, DATES = [], dash = null, buckets = [], drag = null, geo = null;
+  const idxOf = iso => { const i = DATES.indexOf(iso); return i >= 0 ? i : iso < DATES[0] ? 0 : DATES.length - 1; };
+  const PRESETS = { all: ['2016-09-04', '2018-09-03'], 2017: ['2017-01-01', '2017-12-31'], 2018: ['2018-01-01', '2018-09-03'], q4: ['2017-10-01', '2017-12-31'], bf: ['2017-11-17', '2017-12-01'] };
 
   function initDash(data) {
     S = data;
@@ -1177,27 +1207,27 @@
     DATES = Array.from({ length: S.dates_n }, (_, i) => new Date(t0 + i * 864e5).toISOString().slice(0, 10));
     dash = { from: 0, to: DATES.length - 1, gran: 'day', metric: 'revenue', state: '' };
     $('d-from').min = $('d-to').min = DATES[0]; $('d-from').max = $('d-to').max = DATES[DATES.length - 1];
-    const states = Object.keys(S.states).sort();
-    $('d-state').innerHTML = '<option value="">All states</option>' + states.map(s => '<option>' + s + '</option>').join('');
+    $('d-state').innerHTML = '<option value="">All states</option>' + Object.keys(S.states).sort().map(s => '<option>' + s + '</option>').join('');
     renderDash();
   }
-  function setRange(a, b, fromPreset) {
+  function setRange(a, b, preset) {
     let i = idxOf(a), j = idxOf(b); if (i > j) [i, j] = [j, i];
     dash.from = i; dash.to = j;
-    if (!fromPreset) $('d-preset').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+    $('d-preset').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === preset)));
     renderDash();
   }
-  seg('d-preset', v => setRange(...PRESETS[v], true));
+  $('d-preset').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setRange(...PRESETS[b.dataset.v], b.dataset.v)));
   seg('d-gran', v => { dash.gran = v; renderDash(); });
-  seg('d-metric', v => { dash.metric = v; renderDash(); });
-  $('d-from').onchange = () => setRange($('d-from').value, DATES[dash.to]);
-  $('d-to').onchange = () => setRange(DATES[dash.from], $('d-to').value);
+  document.querySelectorAll('.kcell[data-metric]').forEach(c => c.addEventListener('click', () => {
+    document.querySelectorAll('.kcell[data-metric]').forEach(x => x.setAttribute('aria-pressed', String(x === c)));
+    dash.metric = c.dataset.metric; renderDash();
+  }));
+  $('d-from').onchange = () => $('d-from').value && setRange($('d-from').value, DATES[dash.to]);
+  $('d-to').onchange = () => $('d-to').value && setRange(DATES[dash.from], $('d-to').value);
   $('d-state').onchange = () => { dash.state = $('d-state').value; renderDash(); };
   $('d-ann').onchange = () => drawChart();
-  $('d-reset').onclick = () => {
-    dash.state = ''; $('d-state').value = '';
-    $('d-preset').querySelector('[data-v="all"]').click();
-  };
+  $('d-reset').onclick = () => { dash.state = ''; $('d-state').value = ''; setRange(...PRESETS.all, 'all'); };
+
   function bucketKey(iso) {
     if (dash.gran === 'month') return iso.slice(0, 7);
     if (dash.gran === 'week') { const d = new Date(iso + 'T00:00:00Z'), wd = (d.getUTCDay() + 6) % 7; return new Date(d - wd * 864e5).toISOString().slice(0, 10); }
@@ -1208,102 +1238,140 @@
     const R = dash.state ? S.states[dash.state].r : S.revenue, O = dash.state ? S.states[dash.state].o : S.orders;
     $('d-from').value = DATES[dash.from]; $('d-to').value = DATES[dash.to];
     buckets = [];
-    let rev = 0, ord = 0, peak = -1;
+    let rev = 0, ord = 0, peak = -1; const days = [];
     for (let i = dash.from; i <= dash.to; i++) {
       const k = bucketKey(DATES[i]); let b = buckets[buckets.length - 1];
       if (!b || b.key !== k) { b = { key: k, i0: i, i1: i, r: 0, o: 0 }; buckets.push(b); }
       b.i1 = i; b.r += R[i]; b.o += O[i]; rev += R[i]; ord += O[i];
+      if (R[i] > 0) days.push(R[i]);
       if (peak < 0 || R[i] > R[peak]) peak = i;
     }
+    const filtered = dash.state || dash.from !== 0 || dash.to !== DATES.length - 1;
+    $('d-reset').hidden = !filtered;
     $('d-rev').innerText = money(rev);
-    $('d-rev-f').innerText = nice(DATES[dash.from]) + ' – ' + nice(DATES[dash.to]) + (dash.state ? ' · ' + dash.state : '');
+    $('d-rev-f').innerText = nice(DATES[dash.from]) + ' – ' + nice(DATES[dash.to]);
     $('d-ord').innerText = fmt(ord);
     $('d-aov').innerText = ord ? 'R$ ' + (rev / ord).toFixed(2) : '–';
-    $('d-peak').innerText = peak >= 0 && R[peak] > 0 ? money(R[peak]) : '–';
-    $('d-peak-f').innerText = peak >= 0 && R[peak] > 0 ? nice(DATES[peak]) + ' · ' + fmt(O[peak]) + ' orders' : '';
-    const unit = { day: 'day', week: 'week', month: 'month' }[dash.gran];
-    $('d-chart-title').innerText = { revenue: 'Revenue', orders: 'Orders', aov: 'Avg order value' }[dash.metric] + ' per ' + unit + (dash.state ? ' · ' + dash.state : '');
+    const hasPeak = peak >= 0 && R[peak] > 0;
+    $('d-peak').innerText = hasPeak ? money(R[peak]) : '–';
+    $('d-peak-f').innerText = hasPeak ? nice(DATES[peak]) + (EVENTS[DATES[peak]] ? ' · ' + EVENTS[DATES[peak]] : '') : 'No sales in range';
+    // The finding: the best day against a typical day in the same slice
+    days.sort((a, b) => a - b);
+    const med = days.length ? days[Math.floor(days.length / 2)] : 0, where = dash.state ? ' in ' + dash.state : '';
+    let f = hasPeak ? '<b>' + money(rev) + '</b> from ' + fmt(ord) + ' orders' + where + '. Best day ' + nice(DATES[peak]) + (EVENTS[DATES[peak]] ? ' (' + EVENTS[DATES[peak]] + ')' : '') +
+      ', <b>' + (med ? (R[peak] / med).toFixed(1) + '×' : '–') + '</b> a typical day.' : 'No sales in this range.';
+    if (DATES[dash.to] >= INCOMPLETE[0]) f += ' Data after 22 Aug 2018 is incomplete.';
+    $('d-finding').innerHTML = f;
+    $('d-chart-title').innerText = { revenue: 'Revenue', orders: 'Orders', aov: 'Avg order value' }[dash.metric] + ' per ' + dash.gran + (dash.state ? ' · ' + dash.state : '');
     drawChart();
-    // States in range
-    const st = Object.entries(S.states).map(([k, v]) => { let s = 0; for (let i = dash.from; i <= dash.to; i++) s += v.r[i]; return { label: k, value: s, alt: k === dash.state }; })
-      .sort((a, b) => b.value - a.value).slice(0, 10);
-    bars('d-states', st, Math.max(1, st[0].value), money);
-    $('d-states').querySelectorAll('.bar-row').forEach((row, i) => { row.onclick = () => { dash.state = dash.state === st[i].label ? '' : st[i].label; $('d-state').value = dash.state; renderDash(); }; });
-    renderCats();
+    renderStates(); renderCats();
+  }
+  function rankRows(el, rows, max, opts = {}) {
+    const box = $(el); box.textContent = '';
+    rows.forEach(r => {
+      const row = document.createElement(opts.click ? 'button' : 'div');
+      row.className = 'rank-row' + (r.muted ? ' muted-row' : '');
+      if (opts.click) { row.type = 'button'; row.setAttribute('aria-pressed', String(r.label === dash.state)); row.onclick = () => opts.click(r.label); }
+      const lab = document.createElement('span'); lab.className = 'lab'; lab.textContent = r.name || r.label; lab.title = lab.textContent;
+      const tr = document.createElement('span'); tr.className = 'track';
+      const fl = document.createElement('span'); fl.className = 'fill'; fl.style.width = Math.max(0.5, r.value / max * 100) + '%'; tr.appendChild(fl);
+      const v = document.createElement('span'); v.className = 'val'; v.textContent = money(r.value);
+      row.append(lab, tr, v); box.appendChild(row);
+    });
+  }
+  function renderStates() {
+    const all = Object.entries(S.states).map(([k, v]) => { let s = 0; for (let i = dash.from; i <= dash.to; i++) s += v.r[i]; return { label: k, value: s }; }).sort((a, b) => b.value - a.value);
+    let top = all.slice(0, 10);
+    if (dash.state && !top.find(r => r.label === dash.state)) top = top.slice(0, 9).concat(all.find(r => r.label === dash.state));
+    rankRows('d-states', top, Math.max(1, all[0].value), { click: st => { dash.state = dash.state === st ? '' : st; $('d-state').value = dash.state; renderDash(); } });
+    $('d-states-meta').innerText = (dash.state ? 'Filtered to ' + dash.state : 'Top 10 of ' + all.length) + ' · select to filter';
   }
   function renderCats() {
     const m0 = S.months.indexOf(DATES[dash.from].slice(0, 7)), m1 = S.months.indexOf(DATES[dash.to].slice(0, 7));
-    let rows = Object.entries(S.cat_month).map(([k, v]) => ({ label: k, value: v.slice(m0, m1 + 1).reduce((a, b) => a + b, 0) }));
+    const rows = Object.entries(S.cat_month).map(([k, v]) => ({ label: k, name: k.replace(/_/g, ' '), value: v.slice(m0, m1 + 1).reduce((a, b) => a + b, 0) }));
     const blank = rows.find(r => r.label === '(Blank)');
-    rows = rows.filter(r => r.label !== '(Blank)' && r.value > 0).sort((a, b) => b.value - a.value).slice(0, topN);
-    if ($('blank-tog').checked && blank && blank.value > 0) rows.push({ label: '(Blank)', value: blank.value, alt: true });
-    bars('cat-bars', rows, Math.max(1, ...rows.map(r => r.value)), money);
-    $('cat-note').innerText = S.months[m0] + ' to ' + S.months[m1] + ' · all states' + ($('blank-tog').checked ? ' · (Blank) = products with no category' : '');
+    const top = rows.filter(r => r.label !== '(Blank)' && r.value > 0).sort((a, b) => b.value - a.value).slice(0, 9);
+    if (blank && blank.value > 0) top.push({ label: '(Blank)', name: 'No category', value: blank.value, muted: true });
+    rankRows('cat-bars', top, Math.max(1, ...top.map(r => r.value)));
+    $('cat-meta').innerText = 'Top 9 · ' + (m0 === m1 ? S.months[m0] : S.months[m0] + ' to ' + S.months[m1]) + ' · all states';
   }
-  seg('topn-seg', v => { topN = Number(v); renderCats(); }); $('blank-tog').onchange = renderCats;
 
   const val = b => dash.metric === 'revenue' ? b.r : dash.metric === 'orders' ? b.o : (b.o ? b.r / b.o : 0);
-  const fmtVal = v => dash.metric === 'orders' ? fmt(Math.round(v)) : dash.metric === 'aov' ? 'R$ ' + v.toFixed(0) : money(v);
   const axVal = v => dash.metric === 'orders' ? fmt(Math.round(v)) : v >= 1e6 ? 'R$ ' + +(v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? 'R$ ' + +(v / 1e3).toFixed(0) + 'K' : 'R$ ' + Math.round(v);
-  function niceMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
-  let geo = null;
+  function niceStep(max, n) { const raw = max / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
   function drawChart() {
-    const box = $('d-chart'), W = Math.max(300, box.clientWidth), H = innerWidth < 600 ? 240 : 300;
-    const P = { l: 64, r: 14, t: 14, b: 26 }, n = buckets.length, svg = $('d-svg');
-    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', W); svg.setAttribute('height', H);
+    const box = $('d-chart'), svg = $('d-svg');
+    const W = Math.max(280, box.clientWidth - 40), phone = innerWidth < 600, ann = $('d-ann').checked;
+    const n = buckets.length;
     if (!n) { svg.innerHTML = ''; return; }
-    const vals = buckets.map(val), max = niceMax(Math.max(...vals));
+    const vals = buckets.map(val), bIdx = iso => buckets.findIndex(b => DATES[b.i0] <= iso && iso <= DATES[b.i1]);
+    const evs = ann ? Object.keys(EVENTS).map(d => ({ d, i: bIdx(d) })).filter(e => e.i >= 0) : [];
+    const top = 22 + (evs.length ? 20 : 0), H = (phone ? 220 : 280) + (evs.length ? 20 : 0);
+    const P = { l: 58, r: 8, t: top, b: 26 };
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', W); svg.setAttribute('height', H);
+    const step = niceStep(Math.max(...vals) || 1, 4), max = Math.max(step, Math.ceil((Math.max(...vals) * 1.04) / step) * step);
     const x = i => n === 1 ? (P.l + W - P.r) / 2 : P.l + i / (n - 1) * (W - P.l - P.r);
     const y = v => P.t + (1 - v / max) * (H - P.t - P.b);
     geo = { x, y, n, P, W, H };
     let g = '';
-    for (let k = 0; k <= 4; k++) { const v = max * k / 4, yy = y(v); g += '<line x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + yy + '" y2="' + yy + '" class="grid-l"/><text x="' + (P.l - 8) + '" y="' + (yy + 4) + '" class="ax" text-anchor="end">' + axVal(v) + '</text>'; }
-    const ticks = Math.min(n, innerWidth < 600 ? 4 : 7);
-    for (let k = 0; k < ticks; k++) {
-      const i = ticks === 1 ? 0 : Math.round(k * (n - 1) / (ticks - 1)), key = buckets[i].key;
-      const lab = dash.gran === 'month' ? MON[key.slice(5, 7) - 1] + ' ' + key.slice(2, 4) : nice(key).replace(/ (\d{2})(\d{2})$/, " '$2");
-      g += '<text x="' + x(i) + '" y="' + (H - 6) + '" class="ax" text-anchor="' + (k === 0 ? 'start' : k === ticks - 1 ? 'end' : 'middle') + '">' + lab + '</text>';
-    }
-    // Annotations: sparse start, incomplete end, Black Friday
-    const bIdx = iso => buckets.findIndex(b => DATES[b.i0] <= iso && iso <= DATES[b.i1]);
-    const band = (a, b2, label, cls) => {
-      const lo = a < DATES[dash.from] ? 0 : bIdx(a), hi = b2 > DATES[dash.to] ? n - 1 : bIdx(b2);
-      if (a > DATES[dash.to] || b2 < DATES[dash.from] || lo < 0 || hi < 0) return '';
-      const x0 = Math.max(P.l, x(lo) - 2), x1 = Math.min(W - P.r, x(hi) + 2);
-      return '<rect x="' + x0 + '" y="' + P.t + '" width="' + Math.max(2, x1 - x0) + '" height="' + (H - P.t - P.b) + '" class="' + cls + '"/>' +
-        (x1 - x0 > 40 ? '<text x="' + ((x0 + x1) / 2) + '" y="' + (P.t + 14) + '" class="ax band-t" text-anchor="middle">' + label + '</text>' : '');
+    // Shaded bands, drawn first so the grid and line sit on top
+    const band = ([a, b2], label, cls) => {
+      if (!ann || a > DATES[dash.to] || b2 < DATES[dash.from]) return '';
+      const lo = a <= DATES[dash.from] ? 0 : bIdx(a), hi = b2 >= DATES[dash.to] ? n - 1 : bIdx(b2);
+      if (lo < 0 || hi < 0) return '';
+      const x0 = lo === 0 ? P.l : x(lo), x1 = hi === n - 1 ? W - P.r : x(hi), w = Math.max(3, x1 - x0);
+      return '<rect x="' + x0 + '" y="' + P.t + '" width="' + w + '" height="' + (H - P.t - P.b) + '" class="' + cls + '"/>' +
+        (w > 56 ? '<text x="' + (x0 + 6) + '" y="' + (P.t + 14) + '" class="ann-s">' + label + '</text>' : '');
     };
-    if ($('d-ann').checked) {
-      g += band('2016-10-11', '2017-01-04', 'Sparse data', 'band');
-      g += band('2018-08-23', '2018-09-03', 'Incomplete', 'band warn-band');
+    g += band(SPARSE, 'Sparse data', 'band') + band(INCOMPLETE, 'Incomplete', 'band-warn');
+    const ticks = Math.round(max / step);
+    for (let k = 0; k <= ticks; k++) {
+      const v = step * k, yy = y(v);
+      g += '<line x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + yy + '" y2="' + yy + '" class="' + (k ? 'grid-l' : 'base-l') + '"/>' +
+        '<text x="' + (P.l - 10) + '" y="' + (yy + 4) + '" class="ax" text-anchor="end">' + axVal(v) + '</text>';
+    }
+    const xt = Math.min(n, phone ? 3 : 6);
+    for (let k = 0; k < xt; k++) {
+      const i = xt === 1 ? 0 : Math.round(k * (n - 1) / (xt - 1)), key = buckets[i].key;
+      const lab = dash.gran === 'month' ? MON[key.slice(5, 7) - 1] + ' ' + key.slice(0, 4) : nice(key);
+      g += '<text x="' + x(i) + '" y="' + (H - 6) + '" class="ax" text-anchor="' + (k === 0 ? 'start' : k === xt - 1 ? 'end' : 'middle') + '">' + lab + '</text>';
     }
     const line = vals.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join('');
     g += '<path d="' + line + 'L' + x(n - 1).toFixed(1) + ' ' + y(0) + 'L' + x(0).toFixed(1) + ' ' + y(0) + 'Z" class="area"/><path d="' + line + '" class="ln"/>';
-    if ($('d-ann').checked) {
-      const bf = bIdx('2017-11-24');
-      if (bf >= 0) g += '<circle cx="' + x(bf) + '" cy="' + y(vals[bf]) + '" r="4" class="mark"/><text x="' + Math.min(W - P.r - 4, x(bf) + 8) + '" y="' + Math.max(P.t + 10, y(vals[bf]) + 4) + '" class="ax mark-t" text-anchor="' + (x(bf) > W - 140 ? 'end' : 'start') + '">Black Friday · 24 Nov 2017</text>';
-    }
+    // Event labels sit in a reserved row above the plot, joined to their point by a leader line
+    evs.forEach(e => {
+      const ex = x(e.i), right = ex > W - 200, ty = 14;
+      g += '<line x1="' + ex + '" x2="' + ex + '" y1="' + (ty + 5) + '" y2="' + (y(vals[e.i]) - 4) + '" class="lead-l"/>' +
+        '<text x="' + (right ? ex - 6 : ex + 6) + '" y="' + ty + '" text-anchor="' + (right ? 'end' : 'start') + '"><tspan class="ann-t">' + EVENTS[e.d] + '</tspan><tspan class="ann-s"> · ' + nice(e.d) + ' · ' + dayVal(DATES.indexOf(e.d)) + '</tspan></text>';
+    });
     g += '<line id="d-guide" class="guide" y1="' + P.t + '" y2="' + (H - P.b) + '" visibility="hidden"/><circle id="d-dot" r="4" class="dot-h" visibility="hidden"/><rect id="d-sel" class="sel" y="' + P.t + '" height="' + (H - P.t - P.b) + '" visibility="hidden"/>';
     svg.innerHTML = g;
   }
+  function dayVal(i) {
+    const R = dash.state ? S.states[dash.state].r : S.revenue, O = dash.state ? S.states[dash.state].o : S.orders;
+    return dash.metric === 'orders' ? fmt(O[i]) + ' orders' : dash.metric === 'aov' ? (O[i] ? brl(R[i] / O[i]) + ' avg' : '–') : money(R[i]);
+  }
   function nearest(evt) {
-    const r = $('d-svg').getBoundingClientRect(), px = evt.clientX - r.left;
-    const { P, W, n } = geo; const t = n === 1 ? 0 : (px - P.l) / (W - P.l - P.r) * (n - 1);
+    const r = $('d-svg').getBoundingClientRect(), px = evt.clientX - r.left, { P, W, n } = geo;
+    const t = n === 1 ? 0 : (px - P.l) / (W - P.l - P.r) * (n - 1);
     return { i: Math.max(0, Math.min(n - 1, Math.round(t))), px };
   }
   const svgEl = $('d-svg');
   svgEl.addEventListener('pointermove', e => {
     if (!geo || !buckets.length) return;
     const { i, px } = nearest(e), b = buckets[i], v = val(b), tip = $('d-tip');
-    const gd = $('d-guide'), dot = $('d-dot');
-    gd.setAttribute('x1', geo.x(i)); gd.setAttribute('x2', geo.x(i)); gd.setAttribute('visibility', 'visible');
-    dot.setAttribute('cx', geo.x(i)); dot.setAttribute('cy', geo.y(v)); dot.setAttribute('visibility', 'visible');
+    $('d-guide').setAttribute('x1', geo.x(i)); $('d-guide').setAttribute('x2', geo.x(i)); $('d-guide').setAttribute('visibility', 'visible');
+    $('d-dot').setAttribute('cx', geo.x(i)); $('d-dot').setAttribute('cy', geo.y(v)); $('d-dot').setAttribute('visibility', 'visible');
     const span = b.i0 === b.i1 ? nice(DATES[b.i0]) : nice(DATES[b.i0]) + ' – ' + nice(DATES[b.i1]);
-    tip.innerHTML = '<b>' + span + '</b><span>Revenue <b>' + brl(b.r) + '</b></span><span>Orders <b>' + fmt(b.o) + '</b></span><span>Avg order <b>' + (b.o ? brl(b.r / b.o) : '–') + '</b></span>';
+    const rows = [['revenue', 'Revenue', brl(b.r)], ['orders', 'Orders', fmt(b.o)], ['aov', 'Avg order', b.o ? brl(b.r / b.o) : '–']]
+      .sort((a, c) => (c[0] === dash.metric) - (a[0] === dash.metric));
+    tip.textContent = '';
+    const dEl = document.createElement('div'); dEl.className = 't-date'; dEl.textContent = span + (EVENTS[DATES[b.i0]] && b.i0 === b.i1 ? ' · ' + EVENTS[DATES[b.i0]] : ''); tip.appendChild(dEl);
+    rows.forEach(([k, l, vv]) => { const r = document.createElement('div'); r.className = 't-row' + (k === dash.metric ? ' main' : ''); const a = document.createElement('span'); a.textContent = l; const bb = document.createElement('b'); bb.textContent = vv; r.append(a, bb); tip.appendChild(r); });
     tip.hidden = false;
-    const left = geo.x(i) + 12 + 190 > geo.W ? geo.x(i) - 12 - tip.offsetWidth : geo.x(i) + 12;
-    tip.style.left = Math.max(0, left) + 'px'; tip.style.top = (geo.P.t + 6) + 'px';
-    if (drag) { const a = Math.min(drag.px, px), w = Math.abs(px - drag.px), s = $('d-sel'); s.setAttribute('x', a); s.setAttribute('width', w); s.setAttribute('visibility', 'visible'); }
+    const gx = geo.x(i) + 20, left = gx + 16 + tip.offsetWidth > geo.W + 20 ? gx - 16 - tip.offsetWidth : gx + 16;
+    tip.style.left = Math.max(20, left) + 'px'; tip.style.top = (geo.P.t + 4) + 'px';
+    if (drag) { const a = Math.min(drag.px, px), s = $('d-sel'); s.setAttribute('x', a); s.setAttribute('width', Math.abs(px - drag.px)); s.setAttribute('visibility', 'visible'); }
   });
   svgEl.addEventListener('pointerleave', () => { $('d-tip').hidden = true; ['d-guide', 'd-dot'].forEach(id => $(id) && $(id).setAttribute('visibility', 'hidden')); });
   svgEl.addEventListener('pointerdown', e => { if (!geo || e.pointerType === 'touch') return; drag = nearest(e); svgEl.setPointerCapture(e.pointerId); });
@@ -1311,9 +1379,9 @@
     if (!drag) return;
     const end = nearest(e), a = Math.min(drag.i, end.i), b = Math.max(drag.i, end.i), moved = Math.abs(end.px - drag.px) > 8;
     drag = null; $('d-sel') && $('d-sel').setAttribute('visibility', 'hidden');
-    if (moved && b > a) setRange(DATES[buckets[a].i0], DATES[buckets[b].i1]);
+    if (moved && b > a) setRange(DATES[buckets[a].i0], DATES[buckets[b].i1], null);
   });
-  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (current === 'dashboard') drawChart(); }, 120); });
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (current === 'dashboard' && S) drawChart(); }, 120); });
 
   // ---------- Summary ----------
   const DOM = [
