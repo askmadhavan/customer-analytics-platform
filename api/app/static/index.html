@@ -1216,6 +1216,7 @@
       re: [/purchase.*(date|time)/, /order.?(date|time)/, /invoice.?date/, /(transaction|sale|txn).?date/, /created/, /date/, /time/], not: /(deliver|estimat|approv|ship|limit|review|answer|carrier|birth|updat)/ },
     { k: 'amount', label: 'Amount', req: true, num: true, exact: ['revenue', 'sales', 'amount', 'total', 'price', 'line_total', 'order_total', 'subtotal', 'sale_amount', 'payment_value', 'unit_price', 'unitprice', 'value'],
       re: [/(revenue|sales|amount|total)/, /price/, /value/], not: /(freight|tax|discount|shipping|qty|quantity|zip|lat|lng|score|_id$|^id$)/ },
+    { k: 'qty', label: 'Quantity', num: true, exact: ['quantity', 'qty', 'units', 'quantity_ordered', 'qty_ordered', 'order_qty', 'order_quantity'], re: [/^(order.?)?quantity(.?ordered)?$/, /^(order.?)?qty(.?ordered)?$/], not: /(photo|image|stock|min|max)/ },
     { k: 'customer', label: 'Customer', req: true, exact: ['customer_unique_id', 'customer_id', 'customerid', 'client_id', 'user_id', 'member_id', 'buyer_id', 'email', 'customer'],
       re: [/customer.*id/, /(client|user|member|buyer).?id/, /customer/], not: /(name|city|state|zip|country)/ },
     { k: 'order', label: 'Order ID', exact: ['order_id', 'orderid', 'invoice', 'invoiceno', 'invoice_no', 'invoice_id', 'transaction_id', 'receipt_id', 'order_no', 'order_number'],
@@ -1242,6 +1243,9 @@
       }));
       MAP[fd.k] = best ? { t: best.t, c: best.c } : null;
     });
+    // Multiply by quantity only when the amount is a per-unit price; a line total already includes it
+    const an = MAP.amount ? MAP.amount.c.toLowerCase() : '';
+    if (MAP.qty && (MAP.qty.t !== MAP.amount.t || !(/(unit|price)/.test(an) && !/(total|sales|amount|revenue|line)/.test(an)))) MAP.qty = null;
     STATUS_KEEP = null;
   }
   function renderMapping() {
@@ -1396,12 +1400,12 @@
         rowOf[s.to] = hit === undefined ? null : byT[s.to].data[hit];
       }
       const get = key => { const fc = fieldCol[key]; if (!fc) return ''; const r = rowOf[fc.t]; return r ? String(r[fc.j] == null ? '' : r[fc.j]).trim() : null; };
-      const dRaw = get('date'), aRaw = get('amount'), cust = get('customer');
+      const dRaw = get('date'), aRaw = get('amount'), qRaw = MAP.qty ? get('qty') : '1', cust = get('customer');
       if (raw.length < 3) raw.push(FIELDS.filter(fd => fieldCol[fd.k]).map(fd => get(fd.k) || ''));
       if (dRaw === null || cust === null) { stats.unmatched++; continue; }
       if (MAP.status) { const st = get('status') || '(empty)'; if (STATUS_KEEP && !STATUS_KEEP.has(st)) { stats.filtered++; continue; } }
       const day = parseDay(dRaw, order); if (isNaN(day)) { stats.badDate++; continue; }
-      const amt = toNum(aRaw); if (isNaN(amt)) { stats.badAmt++; continue; }
+      const amt = toNum(aRaw) * (MAP.qty ? toNum(qRaw) : 1); if (isNaN(amt)) { stats.badAmt++; continue; }
       if (!cust) { stats.noCust++; continue; }
       if (amt < 0) stats.neg++;
       const oid = MAP.order ? (get('order') || 'row' + k) : 'row' + k;
@@ -1480,7 +1484,7 @@
     const q = s => '<span class="s">\'' + esc(s) + '\'</span>';
     const rules = [
       ['Link tables', '<span class="c">-- join on shared columns</span>\n' + (plan.steps.length ? plan.steps.map(s => '<span class="k">left join</span> ' + esc(s.to) + ' <span class="k">using</span> (' + esc(s.col) + ')').join('\n') : '<span class="c">-- one table, no joins</span>')],
-      ['Clean values', '<span class="c">-- ' + fmt(stats.badDate + stats.badAmt + stats.noCust) + ' rows dropped</span>\n' + esc(MAP.date.c) + '::<span class="k">date</span>   <span class="c">-- ' + (order === 'dmy' ? 'day first' : 'month first') + '</span>\n' + esc(MAP.amount.c) + '::<span class="k">numeric</span>\n<span class="k">where</span> ' + esc(MAP.customer.c) + ' <span class="k">is not null</span>'],
+      ['Clean values', '<span class="c">-- ' + fmt(stats.badDate + stats.badAmt + stats.noCust) + ' rows dropped</span>\n' + esc(MAP.date.c) + '::<span class="k">date</span>   <span class="c">-- ' + (order === 'dmy' ? 'day first' : 'month first') + '</span>\n' + esc(MAP.amount.c) + '::<span class="k">numeric</span>' + (MAP.qty ? ' * ' + esc(MAP.qty.c) + '  <span class="c">-- unit price × quantity</span>' : '') + '\n<span class="k">where</span> ' + esc(MAP.customer.c) + ' <span class="k">is not null</span>'],
       ['Filter', MAP.status ? '<span class="k">where</span> ' + esc(MAP.status.c) + ' <span class="k">in</span> (' + [...(STATUS_KEEP || [])].map(q).join(', ') + ')' : '<span class="c">-- no status filter</span>'],
       ['Aggregate per customer', '<span class="k">group by</span> ' + esc(MAP.customer.c) + '\n<span class="k">count</span>(<span class="k">distinct</span> ' + (MAP.order ? esc(MAP.order.c) : 'row') + ') <span class="k">as</span> frequency,\n<span class="k">sum</span>(' + esc(MAP.amount.c) + ')   <span class="k">as</span> monetary,\n' + q(isoDay(snap)) + ' - <span class="k">max</span>(' + esc(MAP.date.c) + ') <span class="k">as</span> recency']
     ];
@@ -1495,6 +1499,7 @@
     const row = i => ({ customer_unique_id: String(mart.ids[i]), recency: mart.recency[i], frequency: mart.frequency[i], monetary: mart.monetary[i], avg_order_value: mart.avg_order_value[i], customer_lifetime_days: mart.customer_lifetime_days[i] });
     return { n, windows, churned_at, freq, recency_hist: hist, sample: [...pick].map(row), search: q => { const out = []; for (let i = 0; i < n && out.length < 12; i++) if (String(mart.ids[i]).toLowerCase().includes(q)) out.push(row(i)); return out; } };
   }
+  const plural = w => /(s|x|ch|sh)$/.test(w) ? w + 'es' : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ies' : w + 's';
   const quant = (arr, q) => { const a = Array.from(arr).sort((x, y) => x - y); return a.length ? a[Math.min(a.length - 1, Math.floor(q * a.length))] : 0; };
   async function runCustomPipeline() {
     const err = mappingError(); if (err) { renderMapping(); return; }
@@ -1529,7 +1534,7 @@
         [Math.max(1, Math.round(quant(M.recency, 0.1))), Math.max(5, Math.round(quant(M.frequency, 0.99))), Math.round(quant(M.monetary, 0.99))], [Math.round(quant(M.recency, 0.95)), 1, Math.round(quant(M.monetary, 0.25))]],
       defaults: { rec: Math.round(quant(M.recency, 0.5)), freq: 1, mon: Math.round(quant(M.monetary, 0.5)) }, lifeRepeat: repeat.length ? quant(repeat, 0.5) : 0,
       overview: [[fmt(res.orders), isoDay(res.snap - (res.sales.dates_n)) + ' – ' + isoDay(res.snap - 1)], [fmt(M.n), MAP.order ? fmt(res.orders) + ' orders' : ''], [pct(once / M.n), fmt(once) + ' of ' + fmt(M.n)], [pct(churn120 / M.n), 'no order in 120 days']],
-      customers: [fmt(M.n), ''], region: MAP.region ? MAP.region.c : '', regionPlural: MAP.region ? MAP.region.c.replace(/_/g, ' ') + 's' : ''
+      customers: [fmt(M.n), ''], region: MAP.region ? MAP.region.c : '', regionPlural: MAP.region ? plural(MAP.region.c.replace(/_/g, ' ').toLowerCase()) : ''
     };
     DATA = { thresholds: TH, grid: GRID, insights: makeInsights(M), models: null };
     runs = []; activeRun = null;
@@ -1926,14 +1931,14 @@
   }
   function renderStates() {
     const all = Object.entries(S.states).map(([k, v]) => { let s = 0; for (let i = dash.from; i <= dash.to; i++) s += v.r[i]; return { label: k, value: s }; }).sort((a, b) => b.value - a.value);
-    if (!all.length) return;
+    if (!all.length) { $('d-states').textContent = ''; return; }
     let top = all.slice(0, 10);
     if (dash.state && !top.find(r => r.label === dash.state)) top = top.slice(0, 9).concat(all.find(r => r.label === dash.state));
     rankRows('d-states', top, Math.max(1, all[0].value), { click: st => { dash.state = dash.state === st ? '' : st; $('d-state').value = dash.state; renderDash(); } });
     $('d-states-meta').innerText = dash.state ? 'Filtered to ' + dash.state : 'Top ' + Math.min(10, all.length) + ' of ' + all.length;
   }
   function renderCats() {
-    if (!Object.keys(S.cat_month).length) return;
+    if (!Object.keys(S.cat_month).length) { $('cat-bars').textContent = ''; return; }
     const m0 = S.months.indexOf(DATES[dash.from].slice(0, 7)), m1 = S.months.indexOf(DATES[dash.to].slice(0, 7));
     const rows = Object.entries(S.cat_month).map(([k, v]) => ({ label: k, name: k.replace(/_/g, ' '), value: v.slice(m0, m1 + 1).reduce((a, b) => a + b, 0) }));
     const blank = rows.find(r => r.label === '(Blank)');
