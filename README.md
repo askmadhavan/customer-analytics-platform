@@ -1,463 +1,245 @@
 # Customer Analytics Platform
 
-![Docker](https://img.shields.io/badge/Docker-enabled-blue)
 ![Python](https://img.shields.io/badge/Python-3.12-yellow)
+![Docker](https://img.shields.io/badge/Docker-enabled-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
-![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-workflow%20orchestration-red)
-![dbt](https://img.shields.io/badge/dbt-analytics-orange)
-![FastAPI](https://img.shields.io/badge/FastAPI-API%20service-green)
+![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-orchestration-red)
+![dbt](https://img.shields.io/badge/dbt-transformation-orange)
+![scikit--learn](https://img.shields.io/badge/scikit--learn-ML-f7931e)
 ![MLflow](https://img.shields.io/badge/MLflow-experiment%20tracking-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-green)
 ![Power BI](https://img.shields.io/badge/Power%20BI-dashboard-yellow)
-![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI/CD-black)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI-black)
 
-End-to-End Data Analytics & Machine Learning Platform
+An end-to-end data analytics and machine learning platform built on real e-commerce data. It loads raw orders into a database, cleans and models them with dbt, reports on them in Power BI, and predicts which customers are likely to stop buying (churn) through a FastAPI service with a simple web app.
 
-This project demonstrates an end-to-end analytics platform
-built with modern data engineering, analytics and machine learning tools.
+## Business problem
 
-The goal is to analyze customer behavior, generate business insights,
-and predict customer churn.
-## Business Problem
+An online marketplace wants to know:
 
-E-commerce companies need to understand:
-
-- Which customers generate the most value?
+- Which customers bring the most value?
 - Which products drive revenue?
-- Which customers are at risk of churn?
-- How can data support business decisions?
+- Which customers are at risk of leaving?
 
-This project builds a complete analytics pipeline
-to answer these questions.
-
+This project builds the full pipeline that answers those questions, from raw CSV files to a live prediction.
 
 ## Architecture
+
 ```mermaid
 flowchart LR
-
-    A[Olist CSV Dataset<br/>data/raw] --> B[Airflow DAG<br/>customer_analytics_pipeline]
-
-    B --> C[Python Ingestion Task<br/>Pandas]
-
-    C --> D[(PostgreSQL<br/>Raw Layer)]
-
-    D --> E[Great Expectations<br/>Data Validation]
-
-    D --> F[dbt Transformation Layer]
-
-    F --> F1[Staging Models]
-    F --> F2[Analytics Marts]
-
-    F2 --> G[Power BI Dashboard]
-
-    F2 --> H[Feature Engineering]
-
-    H --> I[ML Pipeline<br/>Scikit-learn/XGBoost]
-
-    I --> J[MLflow<br/>Experiment Tracking]
-
-    I --> K[FastAPI<br/>Churn Prediction API]
-
+    A[Olist CSV files<br/>data/raw] --> B[Airflow DAG<br/>customer_analytics_pipeline]
+    B --> C[Ingestion<br/>Python + pandas]
+    C --> D[(PostgreSQL<br/>raw tables)]
+    D --> E[Great Expectations<br/>data checks]
+    D --> F[dbt<br/>staging models]
+    F --> G[dbt<br/>analytics marts + tests]
+    G --> H[Power BI dashboard]
+    G --> I[ML training<br/>scikit-learn + MLflow]
+    I --> J[churn_model.pkl]
+    J --> K[FastAPI<br/>churn API + web app]
 ```
 
+| Stage | Tool | What it does |
+|---|---|---|
+| Ingestion | Python, pandas | Loads every CSV in `data/raw/` into PostgreSQL |
+| Orchestration | Apache Airflow | Runs ingestion, `dbt run` and `dbt test` in order, daily |
+| Storage | PostgreSQL 16 | Holds raw tables and dbt models |
+| Data quality | Great Expectations, dbt tests | Checks row counts, nulls and uniqueness |
+| Transformation | dbt | Builds staging models and business marts |
+| Analytics | Power BI, Jupyter | Dashboards and exploratory analysis |
+| Machine learning | scikit-learn, MLflow | Trains and tracks the churn model |
+| Serving | FastAPI | `/predict` endpoint and a guided web app |
+| Delivery | Docker, GitHub Actions, Vercel | Local stack, CI checks, hosted API |
 
-# Docker Services
-
-| Service | Purpose |
-|---|---|
-| postgres | PostgreSQL database storing raw and transformed data |
-| airflow | Workflow orchestration, ingestion, and dbt execution |
-| churn_api | FastAPI service for churn prediction |
-
-
-# Tech Stack
-
-## Data Engineering
-
-- Python
-- PostgreSQL
-- Docker
-- Apache Airflow
-- dbt
-- Great Expectations
-
-
-## Analytics
-
-- SQL
-- Pandas
-- Power BI
-
-
-## Machine Learning
-
-- Scikit-learn
-- XGBoost
-- MLflow
-
-
-## Deployment
-
-- FastAPI
-- Docker
-- GitHub Actions
-
-## Project Structure
-
-
-customer-analytics-platform/
+## Project structure
 
 ```
 .
-├── data
-│   └── raw
-│       └── dataset files
-│
-├── airflow
-│   └── dags
-│       └── customer_analytics_pipeline.py
-│
-├── src
-│   └── ingestion scripts
-│
-├── customer_analytics_dbt
-│   └── transformation models
-│
-├── ml
-│   ├── feature engineering
-│   ├── training
-│   └── models
-│
-├── api
-│   └── FastAPI service
-│
-├── dashboard
-│   └── Power BI dashboard
-│
-└── docker-compose.yml
+├── airflow/dags/customer_pipeline.py   # Airflow DAG: ingestion >> dbt run >> dbt test
+├── src/
+│   ├── database.py                     # PostgreSQL connection from env vars
+│   ├── ingestion.py                    # CSV -> PostgreSQL loader
+│   └── validation/validate_orders.py   # Great Expectations checks on orders
+├── great expectations/                 # Great Expectations config and suites
+├── customer_analytics_dbt/
+│   ├── models/staging/                 # stg_orders, stg_customers, stg_order_items, stg_products, stg_reviews
+│   ├── models/marts/                   # fact_orders and analytics marts
+│   └── models/schema.yml               # sources, docs and tests
+├── analysis/sales_analysis.ipynb       # exploratory sales analysis
+├── ml/
+│   ├── src/features.py                 # exports mart_customer_rfm to a training CSV
+│   ├── src/create_churn_dataset.py     # alternative, forward-looking churn label
+│   ├── src/train.py                    # trains the model and logs it to MLflow
+│   ├── src/evaluate.py                 # metrics, confusion matrix, ROC curve
+│   ├── data/training/customer_churn.csv
+│   └── models/churn_model.pkl
+├── api/
+│   ├── app/main.py                     # FastAPI app and web UI
+│   ├── app/model.py                    # loads the model and predicts
+│   ├── app/schemas.py                  # request validation
+│   └── models/churn_model.pkl          # copy bundled for the Vercel deployment
+├── dashboard/                          # Power BI file and screenshots
+├── tests/                              # pytest
+├── docker-compose.yml                  # postgres, airflow, api
+└── Dockerfile                          # Airflow image with dbt-postgres
 ```
-# Data Pipeline
 
-## 1. Data Ingestion
+## Data
 
-Raw datasets are loaded into PostgreSQL using an automated Airflow ingestion task.
+The project uses the [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce): about 99,000 orders from 2016 to 2018. Amounts are in Brazilian reais (R$).
 
-The ingestion task reads CSV files from:
+The dataset is not included in this repository. Download it from Kaggle and extract the CSV files into `data/raw/`:
 
 ```
 data/raw/
+├── olist_customers_dataset.csv
+├── olist_geolocation_dataset.csv
+├── olist_order_items_dataset.csv
+├── olist_order_payments_dataset.csv
+├── olist_order_reviews_dataset.csv
+├── olist_orders_dataset.csv
+├── olist_products_dataset.csv
+├── olist_sellers_dataset.csv
+└── product_category_name_translation.csv
 ```
 
-Expected files:
+Each file becomes a table of the same name in PostgreSQL.
 
-```
-data/
-└── raw/
-    ├── olist_orders_dataset.csv
-    ├── olist_order_items_dataset.csv
-    ├── olist_products_dataset.csv
-    ├── olist_order_reviews_dataset.csv
-    ├── olist_customers_dataset.csv
-    ├── olist_sellers_dataset.csv
-    ├── olist_geolocation_dataset.csv
-    ├── olist_order_payments_dataset.csv
-    └── product_category_name_translation.csv
-```
+## Data models (dbt)
 
-The Airflow DAG loads raw Olist datasets into PostgreSQL.
+**Staging** models clean and type the raw tables, one model per source table.
 
----
+**Marts** are business-ready tables in the `public_analytics` schema:
 
-## 2. Data Validation
+| Model | Grain | Purpose |
+|---|---|---|
+| `fact_orders` | order | Orders joined with customer location |
+| `mart_daily_sales` | day | Orders and revenue per day |
+| `mart_sales_summary` | whole business | Total orders, customers, revenue and average order value |
+| `mart_product_performance` | product | Orders, revenue, average price and review score |
+| `mart_customer_segments` | customer | Rule-based segments: VIP, Loyal, Regular, New |
+| `mart_customer_rfm` | customer | Recency, frequency, monetary value, lifetime and churn label |
 
-Great Expectations validates data quality and consistency.
+Tests in `models/schema.yml` check that keys are unique and not null, and that revenue fields are filled.
 
----
+## Dashboard
 
-## 3. Data Transformation
-
-dbt creates:
-
-- staging models
-- fact tables
-- analytics marts
-- business KPI models
-
----
-
-## 4. Analytics
-
-Business KPIs and customer analytics models are generated.
-
----
-
-## 5. Machine Learning
-
-Customer churn prediction is performed using engineered customer behavior features.
-
----
-## Dashboard Preview
-
-
-### Executive Overview
+### Executive overview
 
 ![Dashboard](dashboard/screenshots/dashboard.png)
 
-### Products 
+### Products
 
 ![Products](dashboard/screenshots/products.png)
 
-# Machine Learning Model
+The Power BI file is `dashboard/customer_analytics_dashboard.pbix`.
 
-## Problem
+## Churn model
 
-Customer churn prediction.
+**Label.** In `mart_customer_rfm`, the snapshot date is 2018-06-01. A customer counts as churned if their last delivered order was more than 120 days before that date.
 
+**Features.** `frequency`, `monetary`, `avg_order_value`, `customer_lifetime_days`. Recency is left out because the label is built from it.
 
-## Features
+**Model.** Random Forest (200 trees, balanced class weights), trained on an 80/20 split. Parameters, accuracy, ROC-AUC and the model itself are logged to MLflow under the `customer_churn_prediction` experiment. The reported test ROC-AUC is about 0.67.
 
-- Recency
-- Frequency
-- Monetary Value
-- Average Order Value
+`ml/src/create_churn_dataset.py` builds an alternative label: a repeat customer churns if they place no order in the 180 days after the snapshot. This looks forward in time, so it avoids building the label from the features.
 
+## API and web app
 
-## Models Tested
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/` | Guided web app: three questions, then a churn verdict, risk score and suggested action |
+| `POST` | `/predict` | Churn prediction for one customer |
+| `GET` | `/health` | Service status |
+| `GET` | `/api/metrics` | Headline business figures |
+| `GET` | `/docs` | Interactive Swagger docs |
 
-- Logistic Regression
-- Random Forest
-- XGBoost
-
-
-## Evaluation Metrics
-
-- Accuracy
-- Precision
-- Recall
-- ROC-AUC
-
-
-## Best Model
-
-Random Forest
-
-
-ROC-AUC:
-
-0.67
-
-
-# How To Run
-
-## Prerequisites
-
-Make sure you have installed:
-
-- Docker Desktop
-- Docker Compose
-
-
-A `.env` file is required for database configuration.
-
-No local Python environment is required because all services run inside Docker containers.
-
----
-
-## 1. Clone Repository
+Example request:
 
 ```bash
-git clone https://github.com/shokoufehyazdanian/Customer-Analytics-Platform.git
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"frequency": 2, "monetary": 200, "recency": 30, "avg_order_value": 100}'
 ```
 
----
+Example response:
 
-## 2. Environment Configuration
-
-Create a `.env` file in the project root directory:
-
-```env
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=customer_analytics
-
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
+```json
+{ "prediction": 0, "churn_prediction": 0, "probability": 0.31 }
 ```
 
----
+## How to run
 
-## 3. Dataset Setup
+### Prerequisites
 
-Raw datasets are not included in this repository because of their size.
+- Docker Desktop with Docker Compose
+- The Olist CSV files in `data/raw/` (see [Data](#data))
 
-Download the Brazilian E-Commerce Public Dataset by Olist from Kaggle:
+### 1. Clone
 
-https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
-
-
-Extract CSV files into:
-
-```
-data/raw/
+```bash
+git clone https://github.com/askmadhavan/Customer-Analytics-Platform.git
+cd Customer-Analytics-Platform
 ```
 
----
-
-## 4. Start Docker Services
-
-Build and start all services:
+### 2. Start the stack
 
 ```bash
 docker compose up --build -d
 ```
 
-This starts:
+| Service | URL | Description |
+|---|---|---|
+| PostgreSQL | `localhost:5434` | Database (user and password `postgres`, database `customer_analytics`) |
+| Airflow | http://localhost:8080 | Orchestration. The login is printed in the container logs: `docker compose logs airflow` |
+| API | http://localhost:8000 | Churn API and web app |
 
-| Service | Description |
-|---|---|
-| PostgreSQL | Data warehouse database |
-| Airflow | Workflow orchestration, ingestion, and dbt execution |
-| FastAPI | Churn prediction API |
+The credentials are local development defaults. Change them before running this anywhere else.
 
----
+### 3. Run the pipeline
 
-## 5. Run Automated Data Pipeline
-
-Data ingestion, transformations, and data quality checks are orchestrated by Apache Airflow.
-
-Open Airflow:
+In Airflow, trigger the `customer_analytics_pipeline` DAG. It runs:
 
 ```
-http://localhost:8080
+data_ingestion  ->  dbt_transform  ->  dbt_test
 ```
 
-Trigger the DAG:
+This loads the CSV files, builds all dbt models and runs the dbt tests.
 
-```
-customer_analytics_pipeline
-```
+### 4. Train the model (optional)
 
-The DAG executes:
-
-```
-ingestion
-    |
-    v
-dbt_run
-    |
-    v
-dbt_test
-```
-
-The pipeline automatically:
-
-- loads raw CSV files into PostgreSQL
-- runs dbt transformations
-- creates analytics models
-- executes dbt data quality tests
-
----
-
-# Analytics Models
-
-dbt creates analytical tables including:
-
-- fact_orders
-- mart_customer_rfm
-- mart_customer_segments
-- mart_sales_summary
-- mart_product_performance
-
-
----
-
-# Access Applications
-
-## Airflow
-
-Open:
-
-```
-http://localhost:8080
-```
-
-
-## FastAPI
-
-Endpoint:
-
-```
-POST http://localhost:8000/docs
-```
-
-
-Example request:
-
-```json
-{
-  "frequency": 30,
-  "monetary": 5,
-  "recency": 450,
-  "avg_order_value": 90
-}
-```
-
-
-Response:
-
-```json
-{
-  "churn_prediction": 1,
-  "probability": 0.51
-}
-```
-
----
-
-# Stop Services
-
-Stop all containers:
+The repository already includes a trained model. To retrain it:
 
 ```bash
-docker compose down
+# Export the training data from the dbt mart (runs inside the Airflow container)
+docker compose exec -w /opt/airflow airflow python ml/src/features.py
+
+# Train and evaluate on your machine, from the repository root
+pip install pandas scikit-learn mlflow joblib matplotlib
+python ml/src/train.py
+python ml/src/evaluate.py
+
+# Browse the runs
+mlflow ui
 ```
 
----
+To ship a new model with the hosted API, copy `ml/models/churn_model.pkl` to `api/models/churn_model.pkl`.
 
-# Project Execution Flow
+### 5. Run the tests
 
-```
-CSV Files
-    |
-    v
-Airflow DAG
-    |
-    v
-Python Ingestion Task
-    |
-    v
-PostgreSQL Raw Layer
-    |
-    v
-dbt Transformations
-    |
-    v
-Analytics Models
-    |
-    v
-Machine Learning Model
-    |
-    v
-FastAPI Prediction API
+```bash
+pip install -r requirements.txt
+PYTHONPATH=. pytest
+flake8 api src tests
 ```
 
-All components run inside Docker containers and are orchestrated through Apache Airflow to provide a reproducible automated pipeline.
+## CI and deployment
 
----
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs pytest and flake8 and builds the API Docker image on every push and pull request.
+- **Vercel** deploys the `api/` folder as a Python function, using the bundled model in `api/models/`.
 
-# Future Improvements
+## Credits
 
-- Cloud deployment (AWS/Azure)
-- Data warehouse migration
-- Real-time streaming pipeline
-- Advanced ML monitoring
-- Automated retraining
+The original data pipeline, dbt models, ML pipeline and dashboard were built by [Shokoufeh Yazdanian](https://github.com/shokoufehyazdanian). The guided churn web app and the Vercel deployment were added by [Madhavan](https://www.linkedin.com/in/askmadhavan/).
+
+Data: [Olist Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) on Kaggle.

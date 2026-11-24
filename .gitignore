@@ -1,8 +1,9 @@
 # Python
 __pycache__/
 *.pyc
+.pytest_cache/
 
-# Virtual environment
+# Virtual environment and secrets
 venv/
 .venv/
 .env
@@ -10,11 +11,10 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 
+# Raw data (download from Kaggle, see README)
 data/raw/*
 !data/raw/.gitkeep
-
-data/processed/*
-!data/processed/.gitkeep
+data/processed/
 
 # OS
 .DS_Store
@@ -23,9 +23,7 @@ data/processed/*
 customer_analytics_dbt/target/
 customer_analytics_dbt/logs/
 customer_analytics_dbt/dbt_packages/
-
-# dbt local profile
-customer_analytics_dbt/profiles.yml
+customer_analytics_dbt/.user.yml
 
 # Logs
 logs/
@@ -35,13 +33,22 @@ airflow/logs/
 mlruns/
 mlflow.db
 
-# Large model files
+# Model files: only the trained churn model is published
 *.pkl
 !ml/models/churn_model.pkl
 !api/models/churn_model.pkl
 *.skops
 
-# Python cache
-__pycache__/
-.pytest_cache/
+# Great Expectations local state
+gx/
+
+# Local scratch scripts (not published)
+connect_postgres.py
+create_expectations.py
+create_suite.py
+init_gx.py
+validate_data.py
+ml/src/create_features.py
+
+# Vercel
 .vercel
