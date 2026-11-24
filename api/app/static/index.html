@@ -57,6 +57,11 @@
     .crumbs b { color: var(--fg); font-weight: 600; }
     .toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sub); cursor: pointer; white-space: nowrap; }
     .toggle input { accent-color: var(--accent); width: 15px; height: 15px; }
+    .top-right { display: flex; align-items: center; gap: 16px; flex: none; }
+    .dataset { font-size: 12px; color: var(--sub); text-decoration: none; background: var(--inset); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+    .dataset b { color: var(--fg); font-weight: 600; }
+    .dataset:hover { border-color: var(--sub); }
+    @media (max-width: 600px) { .pn-label { display: none; } .top-right { gap: 10px; } }
     main { padding: 24px 28px 40px; width: 100%; max-width: 1240px; flex: 1; }
 
     @media (max-width: 900px) {
@@ -326,7 +331,10 @@
   <div class="content">
     <header class="topbar">
       <span class="crumbs" id="crumbs"></span>
-      <label class="toggle"><input type="checkbox" id="pn-toggle"> Presenter notes</label>
+      <div class="top-right">
+        <a class="dataset" href="https://olist.com" target="_blank" rel="noopener" title="Brazilian e-commerce marketplace · public dataset">Example dataset: <b>Olist</b></a>
+        <label class="toggle"><input type="checkbox" id="pn-toggle" aria-label="Presenter notes"> <span class="pn-label">Presenter notes</span></label>
+      </div>
     </header>
 
     <main>
@@ -334,7 +342,7 @@
       <!-- ========== OVERVIEW ========== -->
       <section class="page" data-page="overview" data-title="Overview" data-group="Workspace">
         <div class="page-head">
-          <div><h1 tabindex="-1">Overview</h1><p class="sub">Churn analytics for the Olist marketplace</p></div>
+          <div><h1 tabindex="-1">Overview</h1></div>
           <div class="head-actions"><button class="btn" id="run-all">Run full pipeline</button></div>
         </div>
         <div class="notes pn">
@@ -363,7 +371,7 @@
       <!-- ========== INGESTION ========== -->
       <section class="page" data-page="ingest" data-title="Ingestion" data-group="Data pipeline" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Ingestion</h1><p class="sub">Load Olist source files into PostgreSQL</p></div>
+          <div><h1 tabindex="-1">Ingestion</h1></div>
           <div class="head-actions">
             <button class="btn ghost" id="ing-all">Clear selection</button>
             <button class="btn" id="ing-run">Load selected</button>
@@ -380,7 +388,7 @@
         </div>
         <div class="grid g-side mt">
           <div class="card">
-            <div class="card-head"><span class="card-title" id="schema-title">Table schema</span><span class="meta" id="schema-meta">Load files, then click a loaded file</span></div>
+            <div class="card-head"><span class="card-title" id="schema-title">Table schema</span><span class="meta" id="schema-meta"></span></div>
             <div class="table-wrap"><table><thead><tr><th>Column</th><th>Type</th></tr></thead><tbody id="schema-body"><tr><td colspan="2" class="muted">No table selected</td></tr></tbody></table></div>
           </div>
           <div class="card">
@@ -393,7 +401,7 @@
       <!-- ========== DATA QUALITY ========== -->
       <section class="page" data-page="quality" data-title="Data quality" data-group="Data pipeline" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Data quality</h1><p class="sub">Profile raw tables before transformation</p></div>
+          <div><h1 tabindex="-1">Data quality</h1></div>
           <div class="head-actions"><button class="btn" id="chk-run">Run all checks</button></div>
         </div>
         <div class="notes pn">
@@ -407,7 +415,7 @@
           <div class="card kpi"><div class="label">Rows affected</div><div class="value" id="k-rows">–</div></div>
         </div>
         <div class="card mt">
-          <div class="card-head"><span class="card-title">Checks</span><span class="meta">Click a row to see its query</span></div>
+          <div class="card-head"><span class="card-title">Checks</span></div>
           <div class="table-wrap"><table>
             <thead><tr><th>Check</th><th>Table</th><th>Type</th><th class="num">Result</th><th>Status</th></tr></thead>
             <tbody id="chk-body"></tbody>
@@ -418,7 +426,7 @@
       <!-- ========== TRANSFORMATION ========== -->
       <section class="page" data-page="clean" data-title="Transformation" data-group="Data pipeline" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Transformation</h1><p class="sub">Airflow · dbt models · data tests</p></div>
+          <div><h1 tabindex="-1">Transformation</h1></div>
           <div class="head-actions"><button class="btn" id="dag-run">Trigger DAG</button></div>
         </div>
         <div class="notes pn">
@@ -447,7 +455,6 @@
             </div>
           </div>
           <div class="table-wrap" id="ba-view"></div>
-          <p class="meta mt" id="ba-note"></p>
         </div>
 
         <div class="grid g2 mt">
@@ -461,7 +468,6 @@
               </select>
             </div>
             <div class="code" id="rule-code"></div>
-            <p class="meta mt" id="rule-note"></p>
           </div>
           <div class="card">
             <div class="card-head"><span class="card-title">dbt tests</span><span class="badge" id="tests-badge">not run</span></div>
@@ -473,7 +479,7 @@
       <!-- ========== CUSTOMER INSIGHTS ========== -->
       <section class="page" data-page="insights" data-title="Customer insights" data-group="Analytics" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Customer insights</h1><p class="sub">mart_customer_rfm · 75,387 customers · snapshot 1 Jun 2018</p></div>
+          <div><h1 tabindex="-1">Customer insights</h1></div>
         </div>
         <div class="notes pn">
           <p><b>RFM:</b> recency (customer A), frequency, monetary (customer C). 97% bought once: they never come back. Churn here ≈ 65%, not the 10% on the slide.</p>
@@ -493,12 +499,10 @@
             <div class="hist-axis"><span>0 days</span><span>300</span><span>630</span></div>
             <label class="meta" for="win" style="display:block;margin-top:14px">Churn definition: no purchase in the last <b id="win-lbl">120</b> days</label>
             <input type="range" id="win" min="30" max="360" step="15" value="120">
-            <p class="meta" id="win-note"></p>
           </div>
           <div class="card">
             <div class="card-head"><span class="card-title">Orders per customer</span></div>
             <div class="bars" id="freq-bars"></div>
-            <div class="callout mt" style="font-size:12px">97% bought exactly once. Retention, not acquisition, is the problem.</div>
           </div>
         </div>
         <div class="card mt">
@@ -514,7 +518,7 @@
       <!-- ========== TRAINING ========== -->
       <section class="page" data-page="train" data-title="Training" data-group="Model" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Training</h1><p class="sub">Random Forest · 200 trees · balanced classes</p></div>
+          <div><h1 tabindex="-1">Training</h1></div>
         </div>
         <div class="notes pn">
           <p><b>Supervised classification.</b> Past papers = 75,387 labelled customers. 80/20 = practice vs exam. 200 trees vote.</p>
@@ -551,7 +555,7 @@
           </div>
         </div>
         <div class="card mt">
-          <div class="card-head"><span class="card-title">Experiment runs</span><span class="meta">MLflow · customer_churn_prediction · click a run to select it</span></div>
+          <div class="card-head"><span class="card-title">Experiment runs</span><span class="meta" id="runs-meta"></span></div>
           <div class="table-wrap"><table>
             <thead><tr><th>Run</th><th>Features</th><th>Split</th><th class="num">ROC-AUC</th><th class="num">Accuracy</th><th></th></tr></thead>
             <tbody id="runs-body"></tbody>
@@ -562,8 +566,9 @@
       <!-- ========== EVALUATION ========== -->
       <section class="page" data-page="evaluate" data-title="Evaluation" data-group="Model" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Evaluation</h1><p class="sub" id="ev-run">–</p></div>
+          <div><h1 tabindex="-1">Evaluation</h1></div>
           <div class="head-actions">
+            <select id="ev-run" class="ctl" aria-label="Run to evaluate"></select>
             <div class="seg" id="ev-seg">
               <button aria-pressed="true" data-v="test">Holdout (unseen)</button>
               <button aria-pressed="false" data-v="all">All data (incl. training)</button>
@@ -607,7 +612,6 @@
           <div class="card">
             <div class="card-head"><span class="card-title">Baseline</span></div>
             <div class="bars" id="base-bars"></div>
-            <p class="meta mt">"Everyone churns" needs no model.</p>
             <div class="card-head mt" style="margin-bottom:8px"><span class="card-title">Feature importance</span></div>
             <div class="bars" id="ev-imp"></div>
           </div>
@@ -617,7 +621,7 @@
       <!-- ========== PREDICTION ========== -->
       <section class="page" data-page="predict" data-title="Prediction" data-group="Serving" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Churn prediction</h1><p class="sub">Live model behind <code>POST /predict</code></p></div>
+          <div><h1 tabindex="-1">Churn prediction</h1></div>
           <div class="head-actions"><a class="btn ghost" href="/docs" target="_blank" rel="noopener">API docs ↗</a></div>
         </div>
         <div class="notes pn">
@@ -627,7 +631,6 @@
           <div class="card">
             <div class="q-step" data-q="0">
               <h3 tabindex="-1">Score a customer</h3>
-              <p class="meta" style="margin-top:4px">Answer three questions, or pick a sample.</p>
               <div class="chips mt">
                 <button class="chip" onclick="useExample(10, 1, 80)">New customer</button>
                 <button class="chip" onclick="useExample(35, 3, 390)">Loyal customer</button>
@@ -722,8 +725,8 @@
         <div class="card panel-main">
           <div class="kstrip" role="group" aria-label="Metric">
             <button class="kcell lead" data-metric="revenue" aria-pressed="true"><div class="k-label">Revenue</div><div class="k-value" id="d-rev">–</div><div class="k-sub" id="d-rev-f"></div></button>
-            <button class="kcell" data-metric="orders" aria-pressed="false"><div class="k-label">Orders</div><div class="k-value" id="d-ord">–</div><div class="k-sub">with at least one item</div></button>
-            <button class="kcell" data-metric="aov" aria-pressed="false"><div class="k-label">Avg order value</div><div class="k-value" id="d-aov">–</div><div class="k-sub">revenue ÷ orders</div></button>
+            <button class="kcell" data-metric="orders" aria-pressed="false"><div class="k-label">Orders</div><div class="k-value" id="d-ord">–</div><div class="k-sub" id="d-ord-f"></div></button>
+            <button class="kcell" data-metric="aov" aria-pressed="false"><div class="k-label">Avg order value</div><div class="k-value" id="d-aov">–</div><div class="k-sub" id="d-aov-f"></div></button>
             <div class="kcell"><div class="k-label">Best day</div><div class="k-value" id="d-peak">–</div><div class="k-sub" id="d-peak-f"></div></div>
             <div class="kcell"><div class="k-label">Customers</div><div class="k-value">96,096</div><div class="k-sub warn">Power BI card: 99,441 (IDs)</div></div>
           </div>
@@ -755,7 +758,7 @@
       <!-- ========== SUMMARY ========== -->
       <section class="page" data-page="summary" data-title="Summary" data-group="Summary" hidden>
         <div class="page-head">
-          <div><h1 tabindex="-1">Summary</h1><p class="sub">Apply the same pipeline to your domain</p></div>
+          <div><h1 tabindex="-1">Summary</h1></div>
           <div class="head-actions"><div class="seg" id="dom-seg"><button aria-pressed="true" data-v="customer">Customer</button><button aria-pressed="false" data-v="student">Student</button></div></div>
         </div>
         <div class="notes pn">
@@ -777,7 +780,6 @@
 
       <nav class="pager" aria-label="Page navigation">
         <button class="btn ghost" id="prev-btn">← Back</button>
-        <span class="hint">← → to navigate</span>
         <button class="btn" id="next-btn">Next</button>
       </nav>
     </main>
@@ -958,7 +960,7 @@
       const done = i < chkDone;
       const st = !done ? '<span class="badge">Pending</span>' : c.pass ? '<span class="badge ok">Pass</span>' : '<span class="badge warn">Issue</span>';
       let row = '<tr class="click' + (i === chkOpen ? ' sel' : '') + '" data-i="' + i + '"><td>' + c.name + '</td><td class="id">' + c.table + '</td><td>' + c.type + '</td><td class="num">' + (done ? c.result : '–') + '</td><td>' + st + '</td></tr>';
-      if (i === chkOpen) row += '<tr class="chk-detail"><td colspan="5"><div class="code">' + c.sql + '</div><p class="meta" style="margin-top:8px">' + c.note + '</p></td></tr>';
+      if (i === chkOpen) row += '<tr class="chk-detail"><td colspan="5"><div class="code">' + c.sql + '</div></td></tr>';
       return row;
     }).join('');
     const d = CHECKS.slice(0, chkDone);
@@ -1018,7 +1020,7 @@
     mart: { html: '<table><thead><tr><th>customer_unique_id</th><th class="num">recency</th><th class="num">frequency</th><th class="num">monetary</th><th class="num">avg_order_value</th><th class="num">lifetime_days</th><th class="num">churn</th></tr></thead><tbody><tr><td class="id">cb4253d36367737b6baa4f8ca58fac62</td><td class="num fixed">29</td><td class="num fixed">2</td><td class="num fixed">116.90</td><td class="num">58.45</td><td class="num">323</td><td class="num">0</td></tr><tr><td class="id">52ee6d0a8f1b786485a5bd366aa2137c</td><td class="num fixed">267</td><td class="num fixed">1</td><td class="num fixed">89.90</td><td class="num">89.90</td><td class="num">0</td><td class="num">1</td></tr></tbody></table>',
       note: 'mart_customer_rfm · one row per person · 75,387 rows · ready for the model' }
   };
-  function showBA(v) { $('ba-view').innerHTML = BA[v].html; $('ba-note').innerText = BA[v].note; }
+  function showBA(v) { $('ba-view').innerHTML = BA[v].html; }
   seg('ba-seg', showBA); showBA('raw');
 
   const RULES = [
@@ -1027,7 +1029,7 @@
     ['<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">where</span> o.order_status = <span class="s">\'delivered\'</span>\n  <span class="k">and</span> o.purchase_date &lt; <span class="s">\'2018-06-01\'</span>', 'Only delivered orders before the snapshot date count.'],
     ['<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">count</span>(<span class="k">distinct</span> order_id)  <span class="k">as</span> frequency,\n<span class="k">sum</span>(order_value)          <span class="k">as</span> monetary,\n<span class="s">\'2018-06-01\'</span> - last_purchase <span class="k">as</span> recency,\n<span class="k">case when</span> recency &gt; 120 <span class="k">then</span> 1 <span class="k">else</span> 0 <span class="k">end as</span> churn', 'One row per person with RFM and the churn label.']
   ];
-  function showRule(i) { $('rule-code').innerHTML = RULES[i][0]; $('rule-note').innerText = RULES[i][1]; }
+  function showRule(i) { $('rule-code').innerHTML = RULES[i][0]; }
   $('rule-sel').onchange = e => showRule(Number(e.target.value)); showRule(0);
 
   // ---------- Training (results precomputed from the real training data) ----------
@@ -1038,7 +1040,7 @@
 
   $('feat-list').innerHTML = FEATS.map(f => '<label class="check' + (f === 'recency' ? ' leak' : '') + '"><input type="checkbox" value="' + f + '"' + (DEFAULT_FEATS.includes(f) ? ' checked' : '') + '>' + f + (f === 'recency' ? '<span class="badge warn tag">defines label</span>' : '') + '</label>').join('');
   let split = '20';
-  const splitNote = () => { const te = Math.ceil(75387 * Number(split) / 100); $('split-note').innerText = fmt(75387 - te) + ' practice · ' + fmt(te) + ' exam (hidden during training)'; };
+  const splitNote = () => { const te = Math.ceil(75387 * Number(split) / 100); $('split-note').innerText = fmt(75387 - te) + ' train · ' + fmt(te) + ' test'; };
   seg('split-seg', v => { split = v; splitNote(); }); splitNote();
 
   function addRun(feats, sp, name) {
@@ -1056,7 +1058,14 @@
     $('leak-warn').hidden = !leak;
     bars('res-imp', impRows(r), 1, v => pct(v));
   }
+  function renderRunPicker() {
+    $('ev-run').innerHTML = runs.map(r => '<option value="' + r.id + '">' + r.name + ' · ' + r.feats.length + ' features · ' + (100 - r.split) + '/' + r.split + ' · AUC ' + r.m.auc_test.toFixed(3) + '</option>').join('');
+    if (activeRun) $('ev-run').value = String(activeRun.id);
+  }
+  $('ev-run').onchange = () => { selectRun(runs.find(r => r.id === Number($('ev-run').value))); renderEval(); };
   function renderRuns() {
+    renderRunPicker();
+    $('runs-meta').innerText = runs.length + (runs.length === 1 ? ' run' : ' runs');
     $('runs-body').innerHTML = runs.map(r => {
       const s = metricsAt(r.m.cm_test[thrIndex(0.5)]);
       return '<tr class="click' + (r === activeRun ? ' sel' : '') + '" data-id="' + r.id + '"><td><b>' + r.name + '</b></td><td class="id" style="white-space:normal">' + r.feats.join(', ') + '</td><td>' + (100 - r.split) + ' / ' + r.split + '</td><td class="num">' + r.m.auc_test.toFixed(3) + '</td><td class="num">' + pct(s.acc) + '</td><td>' +
@@ -1086,7 +1095,7 @@
     if (!activeRun) return;
     const r = activeRun, t = Number($('thr').value), ti = thrIndex(t), test = evalSet === 'test';
     const cm = (test ? r.m.cm_test : r.m.cm_all)[ti], s = metricsAt(cm);
-    $('ev-run').innerText = r.name + ' · ' + r.feats.join(', ') + ' · ' + (100 - r.split) + '/' + r.split;
+    $('ev-run').value = String(r.id);
     $('ev-warn').hidden = test;
     $('thr-lbl').innerText = t.toFixed(2);
     $('m-auc').innerText = (test ? r.m.auc_test : r.m.auc_all).toFixed(3);
@@ -1106,7 +1115,6 @@
     const I = DATA.insights, w = Number($('win').value), ch = I.churned_at[I.windows.indexOf(w)];
     $('win-lbl').innerText = w; $('i-win').innerHTML = w + ' <small>days</small>';
     $('i-churned').innerText = fmt(ch); $('i-rate').innerText = pct(ch / I.n); $('i-active').innerText = fmt(I.n - ch);
-    $('win-note').innerText = w === 120 ? 'This is the definition the model is trained on.' : 'The model uses 120 days. Changing the definition changes who counts as churned.';
     const max = Math.max(...I.recency_hist);
     $('hist').innerHTML = I.recency_hist.map((v, i) => '<div class="' + (i * 30 >= w ? 'churn' : '') + '" style="height:' + (v / max * 100) + '%" title="' + (i * 30) + '–' + ((i + 1) * 30) + ' days: ' + fmt(v) + ' customers"></div>').join('');
     renderCustomers();
@@ -1249,6 +1257,9 @@
     $('d-rev-f').innerText = nice(DATES[dash.from]) + ' – ' + nice(DATES[dash.to]);
     $('d-ord').innerText = fmt(ord);
     $('d-aov').innerText = ord ? 'R$ ' + (rev / ord).toFixed(2) : '–';
+    const nd = dash.to - dash.from + 1;
+    $('d-ord-f').innerText = '≈ ' + fmt(Math.round(ord / nd)) + ' per day';
+    $('d-aov-f').innerText = fmt(nd) + ' days';
     const hasPeak = peak >= 0 && R[peak] > 0;
     $('d-peak').innerText = hasPeak ? money(R[peak]) : '–';
     $('d-peak-f').innerText = hasPeak ? nice(DATES[peak]) + (EVENTS[DATES[peak]] ? ' · ' + EVENTS[DATES[peak]] : '') : 'No sales in range';
@@ -1274,7 +1285,7 @@
     let top = all.slice(0, 10);
     if (dash.state && !top.find(r => r.label === dash.state)) top = top.slice(0, 9).concat(all.find(r => r.label === dash.state));
     rankRows('d-states', top, Math.max(1, all[0].value), { click: st => { dash.state = dash.state === st ? '' : st; $('d-state').value = dash.state; renderDash(); } });
-    $('d-states-meta').innerText = (dash.state ? 'Filtered to ' + dash.state : 'Top 10 of ' + all.length) + ' · select to filter';
+    $('d-states-meta').innerText = dash.state ? 'Filtered to ' + dash.state : 'Top 10 of ' + all.length;
   }
   function renderCats() {
     const m0 = S.months.indexOf(DATES[dash.from].slice(0, 7)), m1 = S.months.indexOf(DATES[dash.to].slice(0, 7));
