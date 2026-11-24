@@ -698,9 +698,7 @@
         <div class="dash-title">
           <div>
             <h1 tabindex="-1">Sales</h1>
-            <p class="finding" id="d-finding" aria-live="polite">–</p>
           </div>
-          <span class="source-line">mart_daily_sales · revenue = item price by purchase date</span>
         </div>
         <div class="notes pn">
           <p><b>Descriptive analytics.</b> Click "Black Friday '17": 24 Nov 2017, R$ 152.7K from 1,166 orders. The drop at the end is the dataset ending, not the company. The Customers cell: Power BI counted IDs (99,441), not people (96,096).</p>
@@ -1238,12 +1236,11 @@
     const R = dash.state ? S.states[dash.state].r : S.revenue, O = dash.state ? S.states[dash.state].o : S.orders;
     $('d-from').value = DATES[dash.from]; $('d-to').value = DATES[dash.to];
     buckets = [];
-    let rev = 0, ord = 0, peak = -1; const days = [];
+    let rev = 0, ord = 0, peak = -1;
     for (let i = dash.from; i <= dash.to; i++) {
       const k = bucketKey(DATES[i]); let b = buckets[buckets.length - 1];
       if (!b || b.key !== k) { b = { key: k, i0: i, i1: i, r: 0, o: 0 }; buckets.push(b); }
       b.i1 = i; b.r += R[i]; b.o += O[i]; rev += R[i]; ord += O[i];
-      if (R[i] > 0) days.push(R[i]);
       if (peak < 0 || R[i] > R[peak]) peak = i;
     }
     const filtered = dash.state || dash.from !== 0 || dash.to !== DATES.length - 1;
@@ -1255,13 +1252,6 @@
     const hasPeak = peak >= 0 && R[peak] > 0;
     $('d-peak').innerText = hasPeak ? money(R[peak]) : '–';
     $('d-peak-f').innerText = hasPeak ? nice(DATES[peak]) + (EVENTS[DATES[peak]] ? ' · ' + EVENTS[DATES[peak]] : '') : 'No sales in range';
-    // The finding: the best day against a typical day in the same slice
-    days.sort((a, b) => a - b);
-    const med = days.length ? days[Math.floor(days.length / 2)] : 0, where = dash.state ? ' in ' + dash.state : '';
-    let f = hasPeak ? '<b>' + money(rev) + '</b> from ' + fmt(ord) + ' orders' + where + '. Best day ' + nice(DATES[peak]) + (EVENTS[DATES[peak]] ? ' (' + EVENTS[DATES[peak]] + ')' : '') +
-      ', <b>' + (med ? (R[peak] / med).toFixed(1) + '×' : '–') + '</b> a typical day.' : 'No sales in this range.';
-    if (DATES[dash.to] >= INCOMPLETE[0]) f += ' Data after 22 Aug 2018 is incomplete.';
-    $('d-finding').innerHTML = f;
     $('d-chart-title').innerText = { revenue: 'Revenue', orders: 'Orders', aov: 'Avg order value' }[dash.metric] + ' per ' + dash.gran + (dash.state ? ' · ' + dash.state : '');
     drawChart();
     renderStates(); renderCats();
