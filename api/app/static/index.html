@@ -466,6 +466,7 @@
           </div>
           <div class="term mt" id="dag-term"><span class="dim">Trigger the DAG to see task logs.</span></div>
         </div>
+        <div class="callout mt" id="dag-preview"><b>Preview.</b> Below is what the pipeline <i>will</i> do: a raw input row, the dbt rules, and the tests it will run. Click <b>Trigger DAG</b> to run it and fill in the results.</div>
 
         <div class="card mt">
           <div class="card-head">
@@ -790,9 +791,9 @@
           </table></div>
         </div>
         <div class="flow mt">
-          <div class="node"><b>Data</b><span class="meta">9 files · 1.55M rows</span></div><div class="join">→</div>
-          <div class="node"><b>Intelligence</b><span class="meta">18 tests · AUC 0.667</span></div><div class="join">→</div>
-          <div class="node" data-state="success"><b>Impact</b><span class="meta">Who is at risk, what to do</span></div>
+          <div class="node" id="sum-data"><b>Data</b><span class="meta"></span></div><div class="join">→</div>
+          <div class="node" id="sum-intel"><b>Intelligence</b><span class="meta"></span></div><div class="join">→</div>
+          <div class="node" id="sum-impact"><b>Impact</b><span class="meta"></span></div>
         </div>
       </section>
 
@@ -882,6 +883,17 @@
     }).join('');
     const ok = Object.values(STATUS).filter(v => v === 'ok').length;
     $('pipeline-summary').innerText = ok + ' of ' + Object.keys(STATUS).length + ' healthy';
+    renderSummaryFlow();
+    $('dag-preview').hidden = ['run', 'ok', 'err'].includes(STATUS.clean);
+  }
+  // Summary flow reflects what has actually run, not the example's final numbers
+  function renderSummaryFlow() {
+    const node = (id, done, text) => { const n = $(id); if (done) n.dataset.state = 'success'; else delete n.dataset.state; n.querySelector('.meta').innerText = text; };
+    const l = FILES.filter(f => f.loaded), tested = STATUS.clean === 'ok' && TESTS.length;
+    node('sum-data', l.length > 0, l.length ? l.length + (l.length === 1 ? ' file · ' : ' files · ') + short(l.reduce((s, f) => s + f.rows, 0)) + ' rows' : 'Not loaded yet');
+    node('sum-intel', tested && activeRun,
+      (tested ? TESTS.length + ' tests' : 'Tests not run') + ' · ' + (activeRun ? 'AUC ' + activeRun.m.auc_test.toFixed(3) : 'no model yet'));
+    node('sum-impact', !!activeRun, activeRun ? 'Who is at risk, what to do' : 'Waiting for a model');
   }
 
   // ---------- Navigation ----------
