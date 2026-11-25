@@ -111,7 +111,7 @@ In Airflow, trigger the `customer_analytics_pipeline` DAG. It runs `data_ingesti
 
 1. On **Ingestion**, select **Remove all**, then **Upload files** or drag files onto the page. CSV, TSV and TXT files are supported; upload related files together.
 2. On **Data quality**, select **Run all checks**.
-3. On **Transformation**, review the field mapping, then select **Trigger DAG**.
+3. On **Transformation**, review the field mapping, then select **Run pipeline**.
 4. Every other page now uses your data.
 
 | Field | Required | Notes |

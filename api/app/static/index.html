@@ -444,7 +444,7 @@
       <section class="page" data-page="clean" data-title="Transformation" data-group="Data pipeline" hidden>
         <div class="page-head">
           <div><h1 tabindex="-1">Transformation</h1></div>
-          <div class="head-actions"><button class="btn" id="dag-run">Trigger DAG</button></div>
+          <div class="head-actions"><button class="btn" id="dag-run">Run pipeline</button></div>
         </div>
         <div class="notes pn">
           <p><b>Airflow decides when, dbt decides how.</b> Runs nightly at midnight. Raw tables stay untouched; clean tables are built beside them (ELT).</p>
@@ -456,40 +456,40 @@
           <div id="status-vals" class="mt" hidden></div>
         </div>
         <div class="card">
-          <div class="card-head"><span class="card-title">customer_analytics_pipeline</span><span class="meta" id="dag-status">@daily · last run: none</span></div>
+          <div class="card-head"><span class="card-title">Daily pipeline <span class="meta">customer_analytics_pipeline</span></span><span class="meta" id="dag-status">Runs every day · not run yet</span></div>
           <div class="flow" id="dag">
-            <div class="node" data-task="ingest"><b>data_ingestion</b><span class="meta" id="dag-m1">python ingestion.py</span><span class="badge">queued</span></div>
+            <div class="node" data-task="ingest"><b>1 · Bring data in</b><span class="meta" id="dag-m1">python ingestion.py</span><span class="badge">waiting</span></div>
             <div class="join">→</div>
-            <div class="node" data-task="run"><b>dbt_transform</b><span class="meta" id="dag-m2">dbt run · 11 models</span><span class="badge">queued</span></div>
+            <div class="node" data-task="run"><b>2 · Clean and combine</b><span class="meta" id="dag-m2">dbt run · 11 models</span><span class="badge">waiting</span></div>
             <div class="join">→</div>
-            <div class="node" data-task="test"><b>dbt_test</b><span class="meta" id="dag-m3">dbt test · 18 tests</span><span class="badge">queued</span></div>
+            <div class="node" data-task="test"><b>3 · Check quality</b><span class="meta" id="dag-m3">dbt test · 18 tests</span><span class="badge">waiting</span></div>
           </div>
-          <div class="term mt" id="dag-term"><span class="dim">Trigger the DAG to see task logs.</span></div>
+          <div class="term mt" id="dag-term"><span class="dim">Click Run pipeline to watch each step happen.</span></div>
         </div>
-        <div class="callout mt" id="dag-preview"><b>Preview.</b> Below is what the pipeline <i>will</i> do: a raw input row, the dbt rules, and the tests it will run. Click <b>Trigger DAG</b> to run it and fill in the results.</div>
+        <div class="callout mt" id="dag-preview"><b>Preview:</b> nothing has run yet. Click <b>Run pipeline</b> to see results.</div>
 
         <div class="card mt">
           <div class="card-head">
-            <span class="card-title">Before and after</span>
+            <span class="card-title">One record, before and after</span>
             <div class="seg" id="ba-seg">
               <button aria-pressed="true" data-v="raw" id="ba-l1">Raw order</button>
               <button aria-pressed="false" data-v="stg" id="ba-l2">stg_orders</button>
               <button aria-pressed="false" data-v="mart" id="ba-l3">mart_customer_rfm</button>
             </div>
           </div>
-          <div class="table-wrap" id="ba-view"></div>
+          <p class="meta" id="ba-cap" style="margin:0 0 8px"></p><div class="table-wrap" id="ba-view"></div>
         </div>
 
         <div class="grid g2 mt">
           <div class="card">
-            <div class="card-head"><span class="card-title">Transformation rules</span>
+            <div class="card-head"><span class="card-title">Cleaning rules</span>
               <select id="rule-sel" class="chip" aria-label="Rule">
               </select>
             </div>
-            <div class="code" id="rule-code"></div>
+            <p id="rule-plain" style="margin:0 0 8px"></p><div class="code" id="rule-code"></div>
           </div>
           <div class="card">
-            <div class="card-head"><span class="card-title">dbt tests</span><span class="badge" id="tests-badge">not run</span></div>
+            <div class="card-head"><span class="card-title">Quality checks</span><span class="badge" id="tests-badge">not run</span></div>
             <div class="table-wrap" style="max-height:260px;overflow-y:auto"><table><tbody id="tests-body"></tbody></table></div>
           </div>
         </div>
@@ -1338,14 +1338,22 @@
     'not_null_stg_reviews_review_id', 'not_null_stg_reviews_order_id', 'unique_fact_orders_order_id', 'not_null_fact_orders_order_id', 'not_null_mart_product_performance_product_id',
     'not_null_mart_product_performance_total_revenue', 'not_null_mart_daily_sales_orders', 'not_null_mart_daily_sales_revenue'].map(name => ({ name, pass: true, detail: '' }));
   let TESTS = EX_TESTS;
+  const TEST_PLAIN = { dates_parse: 'Every date can be read', amounts_numeric: 'Every amount is a number', amounts_non_negative: 'No negative amounts', customer_not_null: 'Every order has a customer', joins_matched: 'Every row links to the other files', one_customer_per_order: 'Each order belongs to one customer', revenue_reconciles: 'Revenue totals add up', unique_customer_in_mart: 'Each customer appears once' };
+  function plainTest(name) {
+    if (TEST_PLAIN[name]) return TEST_PLAIN[name];
+    const m = name.match(/^(unique|not_null)_(.+)$/); if (!m) return name;
+    const model = EX_MODELS.concat(['fact_orders']).filter(x => m[2].startsWith(x + '_')).sort((a, b) => b.length - a.length)[0]; if (!model) return name;
+    const table = model.replace(/^(stg|fact|mart)_/, '').replace(/_/g, ' '), col = m[2].slice(model.length + 1).replace(/_id$/, ' ID').replace(/_/g, ' ');
+    return m[1] === 'unique' ? 'Each ' + col + ' appears once (' + table + ')' : 'No missing ' + col + ' (' + table + ')';
+  }
   function renderTests(n) {
-    $('tests-body').innerHTML = TESTS.length ? TESTS.map((t, i) => '<tr><td class="id">' + esc(t.name) + (i < n && t.detail ? ' <span class="meta">' + esc(t.detail) + '</span>' : '') + '</td><td class="num">' +
-      (i < n ? (t.pass ? '<span class="badge ok">PASS</span>' : '<span class="badge warn">WARN</span>') : '<span class="badge">–</span>') + '</td></tr>').join('') : '<tr><td class="muted">Not run</td></tr>';
+    $('tests-body').innerHTML = TESTS.length && !n ? '<tr><td class="muted">' + TESTS.length + ' checks will run after cleaning.</td></tr>' : TESTS.length ? TESTS.map((t, i) => '<tr><td>' + esc(plainTest(t.name)) + (i < n && t.detail ? ' <span class="meta">' + esc(t.detail) + '</span>' : '') + '<br><span class="meta id">' + esc(t.name) + '</span></td><td class="num">' +
+      (i < n ? (t.pass ? '<span class="badge ok">Passed</span>' : '<span class="badge warn">Check</span>') : '<span class="badge">–</span>') + '</td></tr>').join('') : '<tr><td class="muted">Not run</td></tr>';
     const passed = TESTS.slice(0, n).filter(t => t.pass).length;
     $('tests-badge').className = 'badge' + (n && n === TESTS.length ? (passed === n ? ' ok' : ' warn') : '');
-    $('tests-badge').innerText = n ? passed + ' / ' + TESTS.length + ' passed' : 'not run';
+    $('tests-badge').innerText = n ? passed + ' of ' + TESTS.length + ' passed' : 'not run yet';
   }
-  function task(k, st) { const n = $('dag').querySelector('[data-task="' + k + '"]'); n.dataset.state = st; const b = n.querySelector('.badge'); b.innerText = st; b.className = 'badge' + (st === 'success' ? ' ok' : st === 'running' ? ' run' : st === 'failed' ? ' err' : ''); }
+  function task(k, st) { const n = $('dag').querySelector('[data-task="' + k + '"]'); n.dataset.state = st; const b = n.querySelector('.badge'); b.innerText = { queued: 'waiting', running: 'running', success: 'done', failed: 'failed' }[st] || st; b.className = 'badge' + (st === 'success' ? ' ok' : st === 'running' ? ' run' : st === 'failed' ? ' err' : ''); }
   async function runDag() {
     if (MODE === 'custom') return runCustomPipeline();
     $('dag-run').disabled = true; setStatus('clean', 'run'); renderTests(0);
@@ -1361,7 +1369,7 @@
     for (let i = 0; i < TESTS.length; i++) { await wait(90); log('dag-term', 'PASS ' + TESTS[i].name); renderTests(i + 1); }
     log('dag-term', '<span class="ok">Done · PASS=18 WARN=0 ERROR=0</span>');
     task('test', 'success');
-    $('dag-status').innerText = '@daily · last run: success, just now';
+    $('dag-status').innerText = 'Runs every day · last run: just now, all good';
     $('dag-run').disabled = false; setStatus('clean', 'ok');
     await loadExampleResults();
   }
@@ -1379,13 +1387,15 @@
     ['Aggregate per person', '<span class="c">-- mart_customer_rfm.sql</span>\n<span class="k">count</span>(<span class="k">distinct</span> order_id)  <span class="k">as</span> frequency,\n<span class="k">sum</span>(order_value)          <span class="k">as</span> monetary,\n<span class="s">\'2018-06-01\'</span> - last_purchase <span class="k">as</span> recency,\n<span class="k">case when</span> recency &gt; 120 <span class="k">then</span> 1 <span class="k">else</span> 0 <span class="k">end as</span> churn']
   ];
   let BA = EX_BA, RULES = EX_RULES, baView = 'raw';
-  function showBA(v) { baView = v; $('ba-view').innerHTML = BA ? BA[v] : '<p class="muted">Not run</p>'; }
+  const BA_CAP = { raw: 'As it arrives. Highlighted values are stored as text, not as real dates or numbers.', stg: 'Same order after cleaning: dates and amounts fixed, names made readable.', mart: 'All of a customer\'s orders rolled into one row: how recently, how often and how much they buy.' };
+  function showBA(v) { baView = v; $('ba-cap').innerText = BA_CAP[v]; $('ba-view').innerHTML = BA ? BA[v] : '<p class="muted">Not run</p>'; }
   seg('ba-seg', showBA);
   function renderRules() {
     $('rule-sel').innerHTML = RULES.map((r, i) => '<option value="' + i + '">' + esc(r[0]) + '</option>').join('');
     showRule(0);
   }
-  function showRule(i) { $('rule-code').innerHTML = RULES.length ? RULES[i][1] : '<span class="c">-- run the pipeline</span>'; }
+  const RULE_PLAIN = { 'Fix formats': 'Turn dates written as text into real dates.', 'One person, one ID': 'The same shopper can have several IDs; merge them into one person.', 'Keep valid orders': 'Count only delivered orders, up to the cut-off date.', 'Aggregate per person': 'For each customer: number of orders, total spent, and days since the last one.', 'Link tables': 'Connect the files through the columns they share.', 'Clean values': 'Fix dates and amounts, and drop rows with no customer.', 'Filter': 'Keep only completed orders.', 'Aggregate per customer': 'For each customer: number of orders, total spent, and days since the last one.' };
+  function showRule(i) { $('rule-plain').innerText = RULES.length ? RULE_PLAIN[RULES[i][0]] || '' : ''; $('rule-code').innerHTML = RULES.length ? RULES[i][1] : '<span class="c">-- run the pipeline</span>'; }
   $('rule-sel').onchange = e => showRule(Number(e.target.value));
 
   // Uploaded data: join, clean, aggregate and test, for real
@@ -1535,7 +1545,7 @@
     for (let i = 0; i < TESTS.length; i++) { await wait(90); say((TESTS[i].pass ? 'PASS ' : '<span class="w">WARN</span> ') + TESTS[i].name + ' · ' + esc(TESTS[i].detail)); renderTests(i + 1); }
     say('<span class="ok">Done · PASS=' + TESTS.filter(t => t.pass).length + ' WARN=' + TESTS.filter(t => !t.pass).length + '</span>');
     task('test', 'success');
-    $('dag-status').innerText = 'last run: success, just now';
+    $('dag-status').innerText = 'Last run: just now, all good';
     BA = res.ba; RULES = res.rules; showBA(baView); renderRules();
     C.built = true; C.mart = res.mart; C.res = res;
     const M = res.mart, once = M.frequency.reduce((s, v) => s + (v === 1 ? 1 : 0), 0);
@@ -2074,7 +2084,7 @@
     $('dag-m1').innerText = ex ? 'python ingestion.py' : tablesLoaded().length + ' tables';
     $('dag-m2').innerText = ex ? 'dbt run · 11 models' : 'join · clean · aggregate';
     $('dag-m3').innerText = ex ? 'dbt test · 18 tests' : '8 tests';
-    $('ba-l1').innerText = ex ? 'Raw order' : 'Raw rows'; $('ba-l2').innerText = ex ? 'stg_orders' : 'Orders'; $('ba-l3').innerText = ex ? 'mart_customer_rfm' : 'Customers';
+    $('ba-l1').innerText = 'Raw'; $('ba-l2').innerText = 'Cleaned'; $('ba-l3').innerText = 'Per customer';
     showBA(baView); renderRules();
     if (CTX) applyPredictCtx();
     renderInsights(); renderBatch(); splitNote(); renderResult(activeRun); renderRuns(); renderEval();
@@ -2089,9 +2099,9 @@
   function dataChanged(keepTerm) {
     C.built = false; C.mart = null; DATA = null; S = null; runs = []; activeRun = null;
     CHECKS = []; chkDone = 0; TESTS = []; BA = null; RULES = []; CTX = Object.assign({}, EX_CTX, { overview: null, customers: ['–', ''] });
-    if (!keepTerm) $('dag-term').innerHTML = '<span class="dim">Trigger the DAG to see task logs.</span>';
+    if (!keepTerm) $('dag-term').innerHTML = '<span class="dim">Click Run pipeline to watch each step happen.</span>';
     ['ingest', 'run', 'test'].forEach(k => task(k, 'queued'));
-    $('dag-status').innerText = 'last run: none';
+    $('dag-status').innerText = 'Not run yet';
     resetStatus(); autoMap(); $('ing-prog').style.width = FILES.some(f => f.loaded) ? '100%' : '0%';
     renderFiles(); renderChecks(); renderTests(0); applyData(); renderStatus();
   }
@@ -2115,8 +2125,8 @@
     FILES = exampleFiles(); schemaIdx = -1; clearSchema();
     $('ing-term').innerHTML = '<span class="dim">Waiting for a load…</span>'; $('ing-prog').style.width = '0%';
     CHECKS = EX_CHECKS; chkDone = 0; TESTS = EX_TESTS; BA = EX_BA; RULES = EX_RULES; C.built = false;
-    $('dag-term').innerHTML = '<span class="dim">Trigger the DAG to see task logs.</span>';
-    ['ingest', 'run', 'test'].forEach(k => task(k, 'queued')); $('dag-status').innerText = '@daily · last run: none';
+    $('dag-term').innerHTML = '<span class="dim">Click Run pipeline to watch each step happen.</span>';
+    ['ingest', 'run', 'test'].forEach(k => task(k, 'queued')); $('dag-status').innerText = 'Runs every day · not run yet';
     DATA = null; S = null; runs = []; activeRun = null;
     resetStatus();
     renderFiles(); renderChecks(); renderTests(0); applyData(); renderStatus();
