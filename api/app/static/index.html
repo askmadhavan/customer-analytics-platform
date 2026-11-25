@@ -855,7 +855,7 @@
   };
   function resetStatus() {
     STATUS = MODE === 'example'
-      ? { ingest: 'idle', quality: 'idle', clean: 'idle', insights: 'ok', train: 'ok', evaluate: 'ok', predict: apiOk ? 'ok' : 'idle', dashboard: 'ok' }
+      ? { ingest: 'idle', quality: 'idle', clean: 'idle', insights: 'idle', train: 'idle', evaluate: 'idle', predict: 'idle', dashboard: 'idle' }
       : { ingest: FILES.some(f => f.loaded) ? 'ok' : 'idle', quality: 'idle', clean: 'idle', insights: 'idle', train: 'idle', evaluate: 'idle', predict: 'idle', dashboard: 'idle' };
   }
 
@@ -869,7 +869,7 @@
     insights: () => DATA && DATA.insights ? fmt(DATA.insights.n) + ' customers' : 'Needs data',
     train: () => runs.length ? runs.length + (runs.length === 1 ? ' run' : ' runs') : 'No runs',
     evaluate: () => activeRun ? 'AUC ' + activeRun.m.auc_test.toFixed(3) : 'No model',
-    predict: () => MODE === 'example' ? (apiOk ? 'API live' : 'Checking API') : activeRun ? 'Browser model' : 'No model',
+    predict: () => !C.built ? 'No model' : MODE === 'example' ? (apiOk ? 'API live' : 'Checking API') : 'Browser model',
     dashboard: () => S ? money(S.revenue.reduce((a, b) => a + b, 0)) + ' revenue' : 'Needs data'
   };
   function setStatus(k, v) { STATUS[k] = v; renderStatus(); }
@@ -1351,6 +1351,7 @@
     task('test', 'success');
     $('dag-status').innerText = '@daily · last run: success, just now';
     $('dag-run').disabled = false; setStatus('clean', 'ok');
+    await loadExampleResults();
   }
   $('dag-run').onclick = runDag;
 
@@ -1689,7 +1690,7 @@
     selectRun(runs.find(r => r.id === Number(tr.dataset.id)));
   });
   async function train() {
-    if (!DATA || (MODE === 'custom' && !C.built)) return;
+    if (!DATA || !C.built) return;
     const feats = [...$('feat-list').querySelectorAll('input:checked')].map(b => b.value);
     if (!feats.length) { $('train-status').innerText = 'Select at least one feature'; return; }
     $('train-run').disabled = true; setStatus('train', 'run');
@@ -2046,7 +2047,7 @@
 
   // ---------- Switching datasets ----------
   function renderOverview() {
-    const ov = MODE === 'example' || C.built ? CTX.overview : [['–', ''], ['–', ''], ['–', ''], ['–', '']];
+    const ov = C.built ? CTX.overview : [['0', 'Run the pipeline'], ['0', ''], ['0%', ''], ['0%', '']];
     ov.forEach(([v, f], i) => { $('ov-' + i).innerText = v; $('ov-' + i + 'f').innerText = f; });
     const l = FILES.filter(f => f.loaded);
     $('ov-source').innerHTML = MODE === 'example'
@@ -2056,7 +2057,7 @@
   }
   function refreshMoney() { if (S) renderDash(); render(); if (CTX) { $('sc-mon0').innerText = withCur(fmt(CTX.lim.mon[0])); $('sc-mon1').innerText = withCur(fmt(CTX.lim.mon[1])); } }
   function applyData() {
-    document.body.classList.toggle('no-mart', MODE === 'custom' && !C.built);
+    document.body.classList.toggle('no-mart', !C.built);
     const ex = MODE === 'example';
     $('dag-m1').innerText = ex ? 'python ingestion.py' : tablesLoaded().length + ' tables';
     $('dag-m2').innerText = ex ? 'dbt run · 11 models' : 'join · clean · aggregate';
@@ -2087,6 +2088,15 @@
     ['insights', 'train', 'evaluate', 'predict', 'dashboard'].forEach(k => { STATUS[k] = 'idle'; }); STATUS.clean = 'idle';
     applyData(); renderStatus();
   }
+  // The example's results are precomputed; they appear only once the pipeline has run
+  async function loadExampleResults() {
+    if (!EXAMPLE) { try { await EXAMPLE_READY; } catch (e) { return; } }
+    if (MODE !== 'example' || C.built) return;
+    C.built = true; runs = []; activeRun = null;
+    DATA = EXAMPLE.models; addRun(DEFAULT_FEATS, '20', 'random_forest_v1'); initDash(EXAMPLE.sales);
+    Object.assign(STATUS, { insights: 'ok', train: 'ok', evaluate: 'ok', predict: apiOk ? 'ok' : 'idle', dashboard: 'ok' });
+    applyData(); renderStatus();
+  }
   function enterExample() {
     if (FILES.some(f => f.loading)) return;
     MODE = 'example'; CUR = 'R$'; CTX = EX_CTX;
@@ -2095,9 +2105,8 @@
     CHECKS = EX_CHECKS; chkDone = 0; TESTS = EX_TESTS; BA = EX_BA; RULES = EX_RULES; C.built = false;
     $('dag-term').innerHTML = '<span class="dim">Trigger the DAG to see task logs.</span>';
     ['ingest', 'run', 'test'].forEach(k => task(k, 'queued')); $('dag-status').innerText = '@daily · last run: none';
+    DATA = null; S = null; runs = []; activeRun = null;
     resetStatus();
-    runs = []; activeRun = null;
-    if (EXAMPLE) { DATA = EXAMPLE.models; addRun(DEFAULT_FEATS, '20', 'random_forest_v1'); initDash(EXAMPLE.sales); }
     renderFiles(); renderChecks(); renderTests(0); applyData(); renderStatus();
   }
 
@@ -2113,15 +2122,12 @@
 
   // ---------- Boot ----------
   CTX = EX_CTX; resetStatus();
-  fetch('/health').then(r => r.ok ? r.json() : Promise.reject()).then(() => { apiOk = true; $('api-text').innerText = 'API live · model v1'; if (MODE === 'example') setStatus('predict', 'ok'); })
+  fetch('/health').then(r => r.ok ? r.json() : Promise.reject()).then(() => { apiOk = true; $('api-text').innerText = 'API live · model v1'; if (MODE === 'example' && C.built) setStatus('predict', 'ok'); })
     .catch(() => { $('api-dot').classList.add('off'); $('api-text').innerText = 'API unavailable'; });
-  Promise.all([fetch('/static/models.json').then(r => r.json()), fetch('/static/sales.json').then(r => r.json())]).then(([models, sales]) => {
-    EXAMPLE = { models, sales };
-    if (MODE !== 'example') return;
-    DATA = models; addRun(DEFAULT_FEATS, '20', 'random_forest_v1'); initDash(sales);
-    applyData(); renderStatus();
-  });
-  renderFiles(); renderChecks(); renderTests(0); applyPredictCtx(); renderOverview(); renderStatus();
+  const EXAMPLE_READY = Promise.all([fetch('/static/models.json').then(r => r.json()), fetch('/static/sales.json').then(r => r.json())])
+    .then(([models, sales]) => { EXAMPLE = { models, sales }; });
+  EXAMPLE_READY.catch(() => {});
+  renderFiles(); renderChecks(); renderTests(0); applyData(); renderStatus();
   show(location.hash.slice(1) || 'overview', false);
 </script>
 </body>
